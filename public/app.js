@@ -1,0 +1,544 @@
+// ============================================
+// THE FLAMING GOOSE TAVERN — Main App
+// ============================================
+
+const state = { data: null };
+
+// --- Speaker colour assignment ---
+const speakerColourMap = new Map();
+let speakerIndex = 0;
+function getSpeakerClass(name) {
+  if (name === "System" || name === "Narrator") return "speaker-system";
+  if (!speakerColourMap.has(name)) {
+    speakerColourMap.set(name, speakerIndex % 6);
+    speakerIndex++;
+  }
+  return `speaker-${speakerColourMap.get(name)}`;
+}
+
+// --- DOM Refs ---
+const $ = (sel) => document.querySelector(sel);
+const refs = {
+  title: $("#campaign-title"),
+  setting: $("#campaign-setting"),
+  sceneLine: $("#scene-line"),
+  logList: $("#log-list"),
+  logTemplate: $("#log-entry-template"),
+  messageForm: $("#message-form"),
+  audienceSelect: $("#audience-select"),
+  targetWrap: $("#target-wrap"),
+  targetSelect: $("#target-select"),
+  messageInput: $("#message-input"),
+  campaignForm: $("#campaign-form"),
+  agentsList: $("#agents-list"),
+  // Settings
+  settingsBtn: $("#settings-btn"),
+  settingsBackdrop: $("#settings-backdrop"),
+  settingsClose: $("#settings-close"),
+  settingsReset: $("#settings-reset"),
+  setFontSize: $("#set-font-size"),
+  fontSizeVal: $("#font-size-val"),
+  setFontWeight: $("#set-font-weight"),
+  setFontFamily: $("#set-font-family"),
+  setHighContrast: $("#set-high-contrast"),
+  setReduceMotion: $("#set-reduce-motion"),
+  setAccentColor: $("#set-accent-color"),
+  setBgColor: $("#set-bg-color"),
+  setTextColor: $("#set-text-color"),
+  // Rules
+  rulesBtn: $("#rules-btn"),
+  rulesBackdrop: $("#rules-backdrop"),
+  rulesClose: $("#rules-close"),
+  rulesSearch: $("#rules-search"),
+  rulesContent: $("#rules-content"),
+  // Drawer
+  drawerBtn: $("#drawer-btn"),
+  drawerBackdrop: $("#drawer-backdrop"),
+  drawer: $("#drawer"),
+  drawerClose: $("#drawer-close"),
+  // Dice
+  diceMod: $("#dice-mod"),
+  diceResult: $("#dice-result"),
+};
+
+// --- API ---
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Request failed" }));
+    throw new Error(error.error || "Request failed");
+  }
+  return response.json();
+}
+
+// --- Render: Log ---
+function renderLog(log) {
+  refs.logList.innerHTML = "";
+  for (const entry of log) {
+    const node = refs.logTemplate.content.cloneNode(true);
+    const speakerEl = node.querySelector(".log-speaker");
+    speakerEl.textContent = entry.speakerLabel;
+    speakerEl.classList.add(getSpeakerClass(entry.speakerLabel));
+    node.querySelector(".log-target").textContent =
+      entry.target === "all" ? "" : `→ ${lookupAgentName(entry.target)}`;
+    node.querySelector(".log-text").textContent = entry.text;
+    const timeEl = node.querySelector(".log-time");
+    if (entry.timestamp) {
+      const d = new Date(entry.timestamp);
+      timeEl.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    // TTS button
+    const ttsBtn = node.querySelector(".tts-btn");
+    ttsBtn.addEventListener("click", () => speak(entry.text));
+
+    refs.logList.appendChild(node);
+  }
+  refs.logList.scrollTop = refs.logList.scrollHeight;
+}
+
+function lookupAgentName(agentId) {
+  return state.data?.agents?.find((a) => a.id === agentId)?.name || "unknown";
+}
+
+// --- Render: Campaign ---
+function renderCampaign(campaign) {
+  refs.title.textContent = state.data.meta?.title || "The Flaming Goose Tavern";
+  refs.setting.textContent = campaign.setting;
+  refs.sceneLine.textContent = campaign.currentScene || "No scene set";
+
+  const fields = [
+    ["currentScene", "Current scene"],
+    ["sessionSummary", "Session summary"],
+    ["notableNPCs", "Notable NPCs"],
+    ["openQuests", "Open quests / hooks"],
+    ["partyInventory", "Party inventory / facts"],
+    ["facts", "Table facts"],
+    ["gmNotes", "GM notes"],
+  ];
+
+  refs.campaignForm.innerHTML = `
+    <label class="toggle-label">
+      <input type="checkbox" name="gmMode" ${campaign.gmMode ? "checked" : ""} />
+      <span>GM mode enabled</span>
+    </label>
+  `;
+
+  for (const [key, label] of fields) {
+    const field = document.createElement("label");
+    field.innerHTML = `
+      <span>${label}</span>
+      <textarea name="${key}" rows="${key === "currentScene" ? 2 : 3}">${campaign[key] || ""}</textarea>
+    `;
+    refs.campaignForm.appendChild(field);
+  }
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "submit";
+  saveBtn.textContent = "Save Campaign State";
+  saveBtn.className = "secondary";
+  refs.campaignForm.appendChild(saveBtn);
+}
+
+// --- Render: Agents ---
+function renderAgents(agents) {
+  refs.agentsList.innerHTML = "";
+  for (const agent of agents) {
+    const card = document.createElement("article");
+    card.className = "agent-card";
+    card.innerHTML = `
+      <header>
+        <div>
+          <h3>${agent.name}</h3>
+          <p class="agent-meta">${agent.classRole}</p>
+        </div>
+        <label class="toggle-label">
+          <input type="checkbox" name="active" ${agent.active ? "checked" : ""} />
+          <span>Active</span>
+        </label>
+      </header>
+      <form class="agent-form" data-agent-id="${agent.id}">
+        <label>Name<input name="name" value="${agent.name}" /></label>
+        <label>Class / role<input name="classRole" value="${agent.classRole}" /></label>
+        <label>Personality<textarea name="personality" rows="2">${agent.personality}</textarea></label>
+        <label>Goals<textarea name="goals" rows="2">${agent.goals}</textarea></label>
+        <label>Bonds / quirks<textarea name="bondsQuirks" rows="2">${agent.bondsQuirks}</textarea></label>
+        <label>Notes<textarea name="memory" rows="2">${agent.memory}</textarea></label>
+        <label>Voice style<input name="voiceStyle" value="${agent.voiceStyle}" /></label>
+        <button type="submit">Save</button>
+      </form>
+    `;
+    refs.agentsList.appendChild(card);
+  }
+}
+
+function renderTargetOptions(agents) {
+  refs.targetSelect.innerHTML = "";
+  for (const agent of agents.filter((a) => a.active)) {
+    const opt = document.createElement("option");
+    opt.value = agent.id;
+    opt.textContent = `${agent.name} (${agent.classRole})`;
+    refs.targetSelect.appendChild(opt);
+  }
+}
+
+function renderAll() {
+  if (!state.data) return;
+  renderCampaign(state.data.campaign);
+  renderLog(state.data.log);
+  renderAgents(state.data.agents);
+  renderTargetOptions(state.data.agents);
+}
+
+async function loadState() {
+  state.data = await api("/api/state");
+  renderAll();
+}
+
+// --- Dice Roller ---
+function rollDie(sides) {
+  const mod = parseInt(refs.diceMod.value) || 0;
+  const result = Math.floor(Math.random() * sides) + 1;
+  const total = result + mod;
+  const modStr = mod !== 0 ? ` (${mod >= 0 ? "+" : ""}${mod})` : "";
+  const display = `🎲 d${sides}: ${result}${modStr} = ${total}`;
+
+  refs.diceResult.textContent = display;
+  refs.diceResult.classList.remove("hidden");
+
+  // Also speak it
+  speak(`Rolled ${total} on a d ${sides}`);
+
+  return total;
+}
+
+document.querySelectorAll(".dice-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    rollDie(parseInt(btn.dataset.die));
+  });
+});
+
+// --- TTS (Web Speech API) ---
+let ttsActive = false;
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.95;
+  utterance.onstart = () => { ttsActive = true; updateTtsControl(); };
+  utterance.onend = () => { ttsActive = false; updateTtsControl(); };
+  utterance.onerror = () => { ttsActive = false; updateTtsControl(); };
+  window.speechSynthesis.speak(utterance);
+}
+
+function toggleTts() {
+  if (!("speechSynthesis" in window)) return;
+  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    ttsActive = false;
+  } else if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    ttsActive = true;
+  } else {
+    window.speechSynthesis.cancel();
+    ttsActive = false;
+  }
+  updateTtsControl();
+}
+
+function updateTtsControl() {
+  const btn = document.getElementById("tts-control");
+  if (!btn) return;
+  const paused = window.speechSynthesis.paused;
+  const speaking = window.speechSynthesis.speaking;
+  btn.textContent = speaking && !paused ? "⏸ Stop" : (paused ? "▶ Resume" : "🔇");
+  btn.classList.toggle("hidden", !speaking && !paused);
+}
+
+function initTtsControl() {
+  const btn = document.createElement("button");
+  btn.id = "tts-control";
+  btn.className = "icon-btn small hidden";
+  btn.style.cssText = "position:fixed;bottom:12px;right:12px;z-index:800;background:var(--accent);color:var(--bg);font-size:0.8em;font-weight:700;";
+  btn.textContent = "🔇";
+  btn.addEventListener("click", toggleTts);
+  document.body.appendChild(btn);
+}
+
+// --- Settings ---
+const SETTINGS_KEY = "flaming-goose-settings";
+const defaultSettings = {
+  fontSize: 18,
+  fontWeight: "400",
+  fontFamily: "'Merriweather', Georgia, serif",
+  highContrast: false,
+  reduceMotion: false,
+  accentColor: "#d89a4a",
+  bgColor: "#15110f",
+  textColor: "#f5ead8",
+};
+
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { ...defaultSettings };
+  } catch {
+    return { ...defaultSettings };
+  }
+}
+
+function applySettings(s) {
+  document.documentElement.style.setProperty("--font-size", s.fontSize + "px");
+  document.documentElement.style.setProperty("--font-weight", s.fontWeight);
+  document.documentElement.style.setProperty("--font-family", s.fontFamily);
+  document.documentElement.style.setProperty("--accent", s.accentColor);
+  document.documentElement.style.setProperty("--bg", s.bgColor);
+  document.documentElement.style.setProperty("--text", s.textColor);
+
+  document.body.classList.toggle("high-contrast", s.highContrast);
+  document.body.classList.toggle("reduce-motion", s.reduceMotion);
+
+  // Update form controls
+  refs.setFontSize.value = s.fontSize;
+  refs.fontSizeVal.textContent = s.fontSize;
+  refs.setFontWeight.value = s.fontWeight;
+  refs.setFontFamily.value = s.fontFamily;
+  refs.setHighContrast.checked = s.highContrast;
+  refs.setReduceMotion.checked = s.reduceMotion;
+  refs.setAccentColor.value = s.accentColor;
+  refs.setBgColor.value = s.bgColor;
+  refs.setTextColor.value = s.textColor;
+}
+
+function saveSettings(s) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  applySettings(s);
+}
+
+function initSettings() {
+  const s = loadSettings();
+  applySettings(s);
+
+  const update = () => {
+    const s = {
+      fontSize: parseInt(refs.setFontSize.value),
+      fontWeight: refs.setFontWeight.value,
+      fontFamily: refs.setFontFamily.value,
+      highContrast: refs.setHighContrast.checked,
+      reduceMotion: refs.setReduceMotion.checked,
+      accentColor: refs.setAccentColor.value,
+      bgColor: refs.setBgColor.value,
+      textColor: refs.setTextColor.value,
+    };
+    saveSettings(s);
+  };
+
+  refs.setFontSize.addEventListener("input", () => {
+    refs.fontSizeVal.textContent = refs.setFontSize.value;
+    update();
+  });
+  refs.setFontWeight.addEventListener("change", update);
+  refs.setFontFamily.addEventListener("change", update);
+  refs.setHighContrast.addEventListener("change", update);
+  refs.setReduceMotion.addEventListener("change", update);
+  refs.setAccentColor.addEventListener("input", update);
+  refs.setBgColor.addEventListener("input", update);
+  refs.setTextColor.addEventListener("input", update);
+  refs.settingsReset.addEventListener("click", () => saveSettings({ ...defaultSettings }));
+}
+
+// --- Modal toggles ---
+function openModal(backdrop) { backdrop.classList.remove("hidden"); }
+function closeModal(backdrop) { backdrop.classList.add("hidden"); }
+
+refs.settingsBtn.addEventListener("click", () => openModal(refs.settingsBackdrop));
+refs.settingsClose.addEventListener("click", () => closeModal(refs.settingsBackdrop));
+refs.settingsBackdrop.addEventListener("click", (e) => {
+  if (e.target === refs.settingsBackdrop) closeModal(refs.settingsBackdrop);
+});
+
+refs.rulesBtn.addEventListener("click", () => { buildRules(); openModal(refs.rulesBackdrop); });
+refs.rulesClose.addEventListener("click", () => closeModal(refs.rulesBackdrop));
+refs.rulesBackdrop.addEventListener("click", (e) => {
+  if (e.target === refs.rulesBackdrop) closeModal(refs.rulesBackdrop);
+});
+
+// --- Drawer ---
+function openDrawer() {
+  refs.drawerBackdrop.classList.remove("hidden");
+  refs.drawer.classList.remove("hidden");
+}
+function closeDrawer() {
+  refs.drawerBackdrop.classList.add("hidden");
+  refs.drawer.classList.add("hidden");
+}
+
+refs.drawerBtn.addEventListener("click", openDrawer);
+refs.drawerClose.addEventListener("click", closeDrawer);
+refs.drawerBackdrop.addEventListener("click", closeDrawer);
+
+// Drawer tabs
+document.querySelectorAll(".drawer-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".drawer-tab").forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.add("active");
+  });
+});
+
+// --- Rules Reference ---
+const RULES = [
+  {
+    title: "Combat Flow",
+    body: `<ul>
+      <li><strong>Surprise:</strong> DM determines if anyone is surprised</li>
+      <li><strong>Initiative:</strong> Everyone rolls d20 + DEX. Highest goes first.</li>
+      <li><strong>Your turn:</strong> Move + Action + Bonus Action + Reaction (if available)</li>
+      <li><strong>Attack roll:</strong> d20 + proficiency + ability mod vs target AC</li>
+      <li><strong>Damage:</strong> Weapon dice + ability mod</li>
+    </ul>`
+  },
+  {
+    title: "Advantage & Disadvantage",
+    body: `<ul>
+      <li><strong>Advantage:</strong> Roll 2d20, take the higher</li>
+      <li><strong>Disadvantage:</strong> Roll 2d20, take the lower</li>
+      <li>They cancel each other out if you have both</li>
+      <li>Multiple sources of advantage don't stack</li>
+    </ul>`
+  },
+  {
+    title: "Skill Checks",
+    body: `<ul>
+      <li>Roll d20 + ability modifier + proficiency (if proficient)</li>
+      <li>Meet or beat the DC (Difficulty Class) set by DM</li>
+      <li>Common DCs: Easy 10, Medium 15, Hard 20, Very Hard 25</li>
+    </ul>`
+  },
+  {
+    title: "Saving Throws",
+    body: `<ul>
+      <li>Roll d20 + ability modifier + proficiency (if proficient in that save)</li>
+      <li>Meet or beat the DC to resist or halve the effect</li>
+    </ul>`
+  },
+  {
+    title: "Death Saves",
+    body: `<ul>
+      <li>At 0 HP, you're unconscious and make death saves each turn</li>
+      <li>Roll d20: 10+ = success, 9- = failure</li>
+      <li>3 successes = stabilise. 3 failures = dead.</li>
+      <li>Nat 20 = regain 1 HP. Nat 1 = 2 failures.</li>
+      <li>Any healing resets successes and failures</li>
+    </ul>`
+  },
+  {
+    title: "Spellcasting Basics",
+    body: `<ul>
+      <li><strong>Cantrips:</strong> Cast anytime, no slots needed</li>
+      <li><strong>Spell slots:</strong> Consumed on cast, regained on rest</li>
+      <li><strong>Concentration:</strong> Only one spell at a time. Damage = CON save (DC 10 or half damage)</li>
+      <li><strong>Rituals:</strong> Cast without a slot if you have 10 extra minutes</li>
+      <li><strong>Components:</strong> V (verbal), S (somatic), M (material)</li>
+    </ul>`
+  },
+  {
+    title: "Conditions",
+    body: `<ul>
+      <li><strong>Blinded:</strong> Auto-fail sight checks. Attacks have disadvantage. Attacks against you have advantage.</li>
+      <li><strong>Charmed:</strong> Can't attack the charmer. Social checks against you have advantage.</li>
+      <li><strong>Deafened:</strong> Can't hear. Auto-fail hearing checks.</li>
+      <li><strong>Frightened:</strong> Disadvantage on checks/attacks while you can see the source. Can't move toward it.</li>
+      <li><strong>Grappled:</strong> Speed becomes 0. Ends if grappler is incapacitated or you're moved away.</li>
+      <li><strong>Incapacitated:</strong> No actions or reactions.</li>
+      <li><strong>Invisible:</strong> Impossible to see without special sense. Attacks against you have disadvantage. Your attacks have advantage.</li>
+      <li><strong>Paralyzed:</strong> Incapacitated, can't move or speak. Auto-fail STR/DEX saves. Attacks against you have advantage. Melee hits are crits.</li>
+      <li><strong>Poisoned:</strong> Disadvantage on attack rolls and ability checks.</li>
+      <li><strong>Prone:</strong> Disadvantage on attacks. Melee attacks against you have advantage, ranged have disadvantage. Costs half movement to stand.</li>
+      <li><strong>Restrained:</strong> Speed 0. Attacks have disadvantage. Attacks against you have advantage. DEX saves have disadvantage.</li>
+      <li><strong>Stunned:</strong> Incapacitated, can't move, speak falteringly. Auto-fail STR/DEX saves. Attacks against you have advantage.</li>
+      <li><strong>Unconscious:</strong> Incapacitated, can't move or speak. Drops held items, falls prone. Auto-fail STR/DEX saves. Attacks within 5ft have advantage. Melee hits are crits.</li>
+    </ul>`
+  },
+  {
+    title: "Resting",
+    body: `<ul>
+      <li><strong>Short Rest (1 hour):</strong> Spend Hit Dice to heal. Some abilities recharge.</li>
+      <li><strong>Long Rest (8 hours):</strong> Regain all HP, half Hit Dice, all spell slots and class abilities.</li>
+    </ul>`
+  },
+];
+
+function buildRules() {
+  refs.rulesContent.innerHTML = "";
+  for (const rule of RULES) {
+    const section = document.createElement("details");
+    section.className = "rule-section";
+    section.innerHTML = `<summary>${rule.title}</summary><div class="rule-body">${rule.body}</div>`;
+    refs.rulesContent.appendChild(section);
+  }
+}
+
+refs.rulesSearch.addEventListener("input", () => {
+  const query = refs.rulesSearch.value.toLowerCase();
+  document.querySelectorAll(".rule-section").forEach((section) => {
+    const text = section.textContent.toLowerCase();
+    section.style.display = text.includes(query) ? "" : "none";
+  });
+});
+
+// --- Audience toggle ---
+refs.audienceSelect.addEventListener("change", () => {
+  refs.targetWrap.classList.toggle("hidden", refs.audienceSelect.value !== "one");
+});
+
+// --- Message form ---
+refs.messageForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const payload = {
+    audience: refs.audienceSelect.value,
+    targetAgentId: refs.targetSelect.value,
+    text: refs.messageInput.value,
+  };
+  if (!payload.text.trim()) return;
+  state.data = await api("/api/message", { method: "POST", body: JSON.stringify(payload) });
+  refs.messageInput.value = "";
+  renderAll();
+});
+
+// --- Campaign form ---
+refs.campaignForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = new FormData(refs.campaignForm);
+  const payload = Object.fromEntries(form.entries());
+  payload.gmMode = form.get("gmMode") === "on";
+  state.data = await api("/api/campaign", { method: "POST", body: JSON.stringify(payload) });
+  renderAll();
+});
+
+// --- Agent forms ---
+refs.agentsList.addEventListener("submit", async (e) => {
+  const form = e.target.closest(".agent-form");
+  if (!form) return;
+  e.preventDefault();
+  const formData = new FormData(form);
+  const card = form.closest(".agent-card");
+  const active = card.querySelector('input[name="active"]').checked;
+  const payload = Object.fromEntries(formData.entries());
+  payload.active = active;
+  state.data = await api(`/api/agents/${form.dataset.agentId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  renderAll();
+});
+
+// --- Init ---
+initSettings();
+initTtsControl();
+loadState().catch((error) => {
+  refs.logList.innerHTML = `<article class="log-entry"><p class="log-text">Error loading table: ${error.message}</p></article>`;
+});
