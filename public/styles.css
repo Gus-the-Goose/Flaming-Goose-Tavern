@@ -334,6 +334,8 @@ button.secondary {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
 }
 .modal-wide { max-width: 600px; }
 
@@ -351,6 +353,9 @@ button.secondary {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .modal-body label {
@@ -407,7 +412,8 @@ button.secondary {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 60vh;
+  min-height: 0;
+  flex: 1;
   overflow-y: auto;
 }
 
