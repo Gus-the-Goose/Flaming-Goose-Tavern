@@ -4,6 +4,38 @@
 
 const state = { data: null };
 
+const ABILITY_LABELS = {
+  strength: ["Strength", ["athletics"]],
+  dexterity: ["Dexterity", ["acrobatics", "sleightOfHand", "stealth"]],
+  constitution: ["Constitution", []],
+  intelligence: ["Intelligence", ["arcana", "history", "investigation", "nature", "religion"]],
+  wisdom: ["Wisdom", ["animalHandling", "insight", "medicine", "perception", "survival"]],
+  charisma: ["Charisma", ["deception", "intimidation", "performance", "persuasion"]],
+};
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function getPath(obj, path, fallback = "") {
+  return path.split(".").reduce((acc, key) => acc?.[key], obj) ?? fallback;
+}
+
+function setPath(obj, path, value) {
+  const keys = path.split(".");
+  const last = keys.pop();
+  let target = obj;
+  for (const key of keys) {
+    target[key] = target[key] || {};
+    target = target[key];
+  }
+  target[last] = value;
+}
+
 // --- Speaker colour assignment ---
 const speakerColourMap = new Map();
 let speakerIndex = 0;
@@ -151,8 +183,8 @@ function renderAgents(agents) {
     card.innerHTML = `
       <header>
         <div>
-          <h3>${agent.name}</h3>
-          <p class="agent-meta">${agent.classRole}</p>
+          <h3>${escapeHtml(agent.name)}</h3>
+          <p class="agent-meta">${escapeHtml(agent.classRole)}</p>
         </div>
         <label class="toggle-label">
           <input type="checkbox" name="active" ${agent.active ? "checked" : ""} />
@@ -160,18 +192,85 @@ function renderAgents(agents) {
         </label>
       </header>
       <form class="agent-form" data-agent-id="${agent.id}">
-        <label>Name<input name="name" value="${agent.name}" /></label>
-        <label>Class / role<input name="classRole" value="${agent.classRole}" /></label>
-        <label>Personality<textarea name="personality" rows="2">${agent.personality}</textarea></label>
-        <label>Goals<textarea name="goals" rows="2">${agent.goals}</textarea></label>
-        <label>Bonds / quirks<textarea name="bondsQuirks" rows="2">${agent.bondsQuirks}</textarea></label>
-        <label>Notes<textarea name="memory" rows="2">${agent.memory}</textarea></label>
-        <label>Voice style<input name="voiceStyle" value="${agent.voiceStyle}" /></label>
+        <details open>
+          <summary>Role notes</summary>
+          <label>Name<input name="name" value="${escapeHtml(agent.name)}" /></label>
+          <label>Class / role<input name="classRole" value="${escapeHtml(agent.classRole)}" /></label>
+          <label>Personality<textarea name="personality" rows="2">${escapeHtml(agent.personality)}</textarea></label>
+          <label>Goals<textarea name="goals" rows="2">${escapeHtml(agent.goals)}</textarea></label>
+          <label>Bonds / quirks<textarea name="bondsQuirks" rows="2">${escapeHtml(agent.bondsQuirks)}</textarea></label>
+          <label>Notes<textarea name="memory" rows="2">${escapeHtml(agent.memory)}</textarea></label>
+          <label>Voice style<input name="voiceStyle" value="${escapeHtml(agent.voiceStyle)}" /></label>
+        </details>
+        ${renderCharacterSheet(agent.characterSheet || {})}
         <button type="submit">Save</button>
       </form>
     `;
     refs.agentsList.appendChild(card);
   }
+}
+
+function sheetInput(sheet, path, label, className = "") {
+  return `<label class="${className}"><span>${label}</span><input data-sheet-field="${path}" value="${escapeHtml(getPath(sheet, path))}" /></label>`;
+}
+
+function sheetTextarea(sheet, path, label) {
+  return `<label><span>${label}</span><textarea data-sheet-field="${path}" rows="5">${escapeHtml(getPath(sheet, path))}</textarea></label>`;
+}
+
+function skillLabel(key) {
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
+}
+
+function renderCharacterSheet(sheet) {
+  const abilities = Object.entries(ABILITY_LABELS).map(([key, [label, skills]]) => `
+    <fieldset class="ability-card">
+      <legend>${label}</legend>
+      <div class="ability-row">
+        ${sheetInput(sheet, `abilities.${key}.score`, "Score")}
+        ${sheetInput(sheet, `abilities.${key}.modifier`, "Mod")}
+        ${sheetInput(sheet, `abilities.${key}.save`, "Save")}
+      </div>
+      ${skills.map((skill) => sheetInput(sheet, `abilities.${key}.skills.${skill}`, skillLabel(skill), "skill-field")).join("")}
+    </fieldset>
+  `).join("");
+
+  return `
+    <details class="character-sheet-block">
+      <summary>Fillable D&D 5e character sheet</summary>
+      <p class="sheet-help">Structured, screen-reader-friendly version of the blank sheet. Empty fields are fine — fill as the character develops.</p>
+      <section class="sheet-grid sheet-grid-top">
+        ${sheetInput(sheet, "characterName", "Character name")}
+        ${sheetInput(sheet, "classLevel", "Class & level")}
+        ${sheetInput(sheet, "background", "Background")}
+        ${sheetInput(sheet, "playerName", "Player name")}
+        ${sheetInput(sheet, "race", "Race")}
+        ${sheetInput(sheet, "alignment", "Alignment")}
+        ${sheetInput(sheet, "experiencePoints", "Experience points")}
+      </section>
+      <section class="sheet-grid sheet-grid-stats">
+        ${sheetInput(sheet, "proficiencyBonus", "Proficiency bonus")}
+        ${sheetInput(sheet, "inspiration", "Inspiration")}
+        ${sheetInput(sheet, "armorClass", "Armor class")}
+        ${sheetInput(sheet, "initiative", "Initiative")}
+        ${sheetInput(sheet, "speed", "Speed")}
+        ${sheetInput(sheet, "hitPointMaximum", "HP max")}
+        ${sheetInput(sheet, "currentHitPoints", "Current HP")}
+        ${sheetInput(sheet, "temporaryHitPoints", "Temp HP")}
+        ${sheetInput(sheet, "hitDice", "Hit dice")}
+        ${sheetInput(sheet, "deathSaveSuccesses", "Death save successes")}
+        ${sheetInput(sheet, "deathSaveFailures", "Death save failures")}
+        ${sheetInput(sheet, "passivePerception", "Passive perception")}
+      </section>
+      <section class="abilities-grid">${abilities}</section>
+      <section class="sheet-grid sheet-grid-notes">
+        ${sheetTextarea(sheet, "attacksSpellcasting", "Attacks & spellcasting")}
+        ${sheetTextarea(sheet, "featuresTraits", "Features & traits")}
+        ${sheetTextarea(sheet, "otherProficienciesLanguages", "Other proficiencies & languages")}
+        ${sheetTextarea(sheet, "equipmentNotes", "Equipment & character notes")}
+      </section>
+    </details>
+  `;
 }
 
 function renderTargetOptions(agents) {
@@ -529,6 +628,10 @@ refs.agentsList.addEventListener("submit", async (e) => {
   const active = card.querySelector('input[name="active"]').checked;
   const payload = Object.fromEntries(formData.entries());
   payload.active = active;
+  payload.characterSheet = {};
+  form.querySelectorAll("[data-sheet-field]").forEach((field) => {
+    setPath(payload.characterSheet, field.dataset.sheetField, field.value);
+  });
   state.data = await api(`/api/agents/${form.dataset.agentId}`, {
     method: "POST",
     body: JSON.stringify(payload),

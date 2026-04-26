@@ -555,6 +555,20 @@ button.secondary {
   flex-direction: column;
   gap: 8px;
 }
+.agent-form details {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.16);
+}
+.agent-form summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 800;
+  cursor: pointer;
+}
 .agent-form label {
   display: flex;
   flex-direction: column;
@@ -577,6 +591,54 @@ button.secondary {
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
+}
+
+/* --- Fillable Character Sheets --- */
+.character-sheet-block { margin-top: 4px; }
+.sheet-help {
+  margin: 2px 0 10px;
+  color: var(--muted);
+  font-size: 0.78em;
+}
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sheet-grid-notes {
+  grid-template-columns: 1fr;
+}
+.abilities-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+.ability-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255,255,255,0.03);
+}
+.ability-card legend {
+  padding: 0 6px;
+  color: var(--accent);
+  font-size: 0.78em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ability-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.skill-field { margin-top: 6px; }
+
+@media (min-width: 900px) {
+  .drawer { width: min(760px, 96vw); }
+  .abilities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* --- Utility --- */
