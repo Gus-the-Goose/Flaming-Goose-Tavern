@@ -629,10 +629,23 @@ button.secondary {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.character-sheet-block label {
+  min-width: 0;
+}
+.character-sheet-block input,
+.character-sheet-block textarea {
+  width: 100%;
+  min-width: 0;
+}
 .ability-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
+  align-items: end;
+}
+.ability-row label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .skill-field { margin-top: 6px; }
 
