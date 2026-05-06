@@ -1,17 +1,17 @@
-# 🦢🔥 The Flaming Goose Tavern — Quick Guide
+# The Flaming Goose Tavern — Quick Guide
 
 **This is your D&D companion.** Open it on your phone. It works in the browser — no app to install.
 
 ## What you can do
 
-### 🎲 Roll dice
+### Roll dice
 The coloured buttons at the top roll dice for you:
 - **d20** (amber) — the big one. Attacks, checks, saves.
 - **d12** (blue), **d10** (purple), **d8** (green), **d6** (teal), **d4** (red)
 - Add a modifier (like +5) in the ± box before rolling
 - Results appear big and bold, and get read aloud
 
-### ⚙️ Accessibility settings
+### Accessibility settings
 Tap the gear icon. This is **the most important button**:
 - **Font size** — drag the slider until text is comfortable
 - **Font weight** — switch to Bold if you need thicker letters
@@ -20,11 +20,11 @@ Tap the gear icon. This is **the most important button**:
 - **Custom colours** — change background, text, and accent colours to whatever works for you
 - Your settings save automatically and stick on your device
 
-### 🔊 Read aloud
-Every message in the log has a small 🔊 button. Tap it to hear that message read out loud.
-If you tap it by accident, hit the **⏸ Stop** button that appears at the bottom right to pause it.
+### Read aloud
+Every message in the log has a Read button. Tap it to hear that message read out loud.
+If you tap it by accident, hit the **Stop** button that appears at the bottom right to pause it.
 
-### 📖 Rules reference
+### Rules reference
 Tap the book icon for a searchable cheat sheet covering:
 - Combat flow
 - Advantage / disadvantage

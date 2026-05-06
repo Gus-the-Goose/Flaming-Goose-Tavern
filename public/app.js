@@ -393,7 +393,7 @@ function rollDie(sides) {
   const result = Math.floor(Math.random() * sides) + 1;
   const total = result + mod;
   const modStr = mod !== 0 ? ` (${mod >= 0 ? "+" : ""}${mod})` : "";
-  const display = `🎲 d${sides}: ${result}${modStr} = ${total}`;
+  const display = `d${sides}: ${result}${modStr} = ${total}`;
 
   refs.diceResult.textContent = display;
   refs.diceResult.classList.remove("hidden");
@@ -445,7 +445,7 @@ function updateTtsControl() {
   if (!btn) return;
   const paused = window.speechSynthesis.paused;
   const speaking = window.speechSynthesis.speaking;
-  btn.textContent = speaking && !paused ? "⏸ Stop" : (paused ? "▶ Resume" : "🔇");
+  btn.textContent = speaking && !paused ? "Stop" : (paused ? "Resume" : "Read aloud");
   btn.classList.toggle("hidden", !speaking && !paused);
 }
 
@@ -454,7 +454,7 @@ function initTtsControl() {
   btn.id = "tts-control";
   btn.className = "icon-btn small hidden";
   btn.style.cssText = "position:fixed;bottom:12px;right:12px;z-index:800;background:var(--accent);color:var(--bg);font-size:0.8em;font-weight:700;";
-  btn.textContent = "🔇";
+  btn.textContent = "Read aloud";
   btn.addEventListener("click", toggleTts);
   document.body.appendChild(btn);
 }
@@ -465,7 +465,7 @@ function initTranscriptButton() {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "icon-btn";
-  btn.textContent = "📝";
+  btn.textContent = "Copy";
   btn.title = "Copy message transcript for notes";
   btn.setAttribute("aria-label", "Copy message transcript for notes");
   btn.addEventListener("click", () => copyTranscript().catch(() => alert("Could not copy transcript.")));
