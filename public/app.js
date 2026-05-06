@@ -774,6 +774,11 @@ refs.agentsList.addEventListener("submit", async (e) => {
 initSettings();
 initTtsControl();
 initTranscriptButton();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch((error) => console.warn("Service worker registration failed", error));
+  });
+}
 loadState().catch((error) => {
   refs.logList.innerHTML = `<article class="log-entry"><p class="log-text">Error loading table: ${error.message}</p></article>`;
 });
