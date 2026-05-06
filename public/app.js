@@ -7,8 +7,11 @@ const state = { data: null };
 const REFRESH_INTERVAL_MS = 4000;
 const MESSAGE_ARCHIVE_KEY = "flaming-goose-message-archive";
 const SPOKEN_ARCHIVE_KEY = "flaming-goose-spoken-archive";
+const VOICE_NOTES_KEY = "flaming-goose-voice-notes";
 let lastLogSignature = "";
 let refreshTimer = null;
+let recognition = null;
+let dictationActive = false;
 
 const ABILITY_LABELS = {
   strength: ["Strength", ["athletics"]],
@@ -146,6 +149,17 @@ const refs = {
   rulesClose: $("#rules-close"),
   rulesSearch: $("#rules-search"),
   rulesContent: $("#rules-content"),
+  // Notes
+  notesBtn: $("#notes-btn"),
+  notesBackdrop: $("#notes-backdrop"),
+  notesClose: $("#notes-close"),
+  notesStatus: $("#notes-status"),
+  notesStart: $("#notes-start"),
+  notesStop: $("#notes-stop"),
+  notesCopy: $("#notes-copy"),
+  notesDownload: $("#notes-download"),
+  notesClear: $("#notes-clear"),
+  notesText: $("#notes-text"),
   // Drawer
   drawerBtn: $("#drawer-btn"),
   drawerBackdrop: $("#drawer-backdrop"),
@@ -472,6 +486,117 @@ function initTranscriptButton() {
   actions.appendChild(btn);
 }
 
+function appendNote(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  const stamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const prefix = refs.notesText.value.trim() ? "\n" : "";
+  refs.notesText.value += `${prefix}[${stamp}] ${trimmed}`;
+  saveVoiceNotes();
+}
+
+function saveVoiceNotes() {
+  localStorage.setItem(VOICE_NOTES_KEY, refs.notesText.value);
+}
+
+function loadVoiceNotes() {
+  refs.notesText.value = localStorage.getItem(VOICE_NOTES_KEY) || "";
+}
+
+function setNotesStatus(message) {
+  refs.notesStatus.textContent = message;
+}
+
+function setDictationActive(active) {
+  dictationActive = active;
+  refs.notesStart.disabled = active;
+  refs.notesStop.disabled = !active;
+}
+
+function createSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  const instance = new SpeechRecognition();
+  instance.continuous = true;
+  instance.interimResults = false;
+  instance.lang = navigator.language || "en-GB";
+  instance.onstart = () => {
+    setDictationActive(true);
+    setNotesStatus("Listening. Speak your session notes; press Stop when done.");
+  };
+  instance.onresult = (event) => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        appendNote(event.results[i][0].transcript);
+      }
+    }
+  };
+  instance.onerror = (event) => {
+    setNotesStatus(`Dictation error: ${event.error}. If this is iPhone/Safari, try Chrome or use system dictation into the notes box.`);
+    setDictationActive(false);
+  };
+  instance.onend = () => {
+    if (dictationActive) {
+      setDictationActive(false);
+      setNotesStatus("Dictation stopped.");
+    }
+  };
+  return instance;
+}
+
+function startDictation() {
+  recognition = recognition || createSpeechRecognition();
+  if (!recognition) {
+    setNotesStatus("This browser does not support built-in dictation here. Try Chrome/Android, or use your keyboard microphone/system dictation in the notes box.");
+    refs.notesText.focus();
+    return;
+  }
+  try {
+    recognition.start();
+  } catch {
+    setNotesStatus("Dictation is already starting. If it gets stuck, close and reopen Voice Notes.");
+  }
+}
+
+function stopDictation() {
+  if (recognition) recognition.stop();
+  setDictationActive(false);
+  setNotesStatus("Dictation stopped.");
+}
+
+async function copyVoiceNotes() {
+  await navigator.clipboard.writeText(refs.notesText.value || "");
+  setNotesStatus("Notes copied.");
+}
+
+function downloadVoiceNotes() {
+  const blob = new Blob([refs.notesText.value || ""], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `flaming-goose-notes-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setNotesStatus("Notes downloaded.");
+}
+
+function initVoiceNotes() {
+  loadVoiceNotes();
+  refs.notesText.addEventListener("input", saveVoiceNotes);
+  refs.notesStart.addEventListener("click", startDictation);
+  refs.notesStop.addEventListener("click", stopDictation);
+  refs.notesCopy.addEventListener("click", () => copyVoiceNotes().catch(() => setNotesStatus("Could not copy notes.")));
+  refs.notesDownload.addEventListener("click", downloadVoiceNotes);
+  refs.notesClear.addEventListener("click", () => {
+    if (!confirm("Clear the saved notes on this device?")) return;
+    refs.notesText.value = "";
+    saveVoiceNotes();
+    setNotesStatus("Notes cleared.");
+  });
+}
+
 // --- Settings ---
 const SETTINGS_KEY = "flaming-goose-settings";
 const defaultSettings = {
@@ -567,6 +692,12 @@ refs.rulesBtn.addEventListener("click", () => { buildRules(); openModal(refs.rul
 refs.rulesClose.addEventListener("click", () => closeModal(refs.rulesBackdrop));
 refs.rulesBackdrop.addEventListener("click", (e) => {
   if (e.target === refs.rulesBackdrop) closeModal(refs.rulesBackdrop);
+});
+
+refs.notesBtn.addEventListener("click", () => openModal(refs.notesBackdrop));
+refs.notesClose.addEventListener("click", () => closeModal(refs.notesBackdrop));
+refs.notesBackdrop.addEventListener("click", (e) => {
+  if (e.target === refs.notesBackdrop) closeModal(refs.notesBackdrop);
 });
 
 // --- Drawer ---
@@ -774,6 +905,7 @@ refs.agentsList.addEventListener("submit", async (e) => {
 initSettings();
 initTtsControl();
 initTranscriptButton();
+initVoiceNotes();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch((error) => console.warn("Service worker registration failed", error));

@@ -145,6 +145,16 @@ button.secondary {
   font-weight: 600;
 }
 
+button.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.danger-button {
+  border-color: var(--danger) !important;
+  color: #ffd6cf;
+}
+
 /* --- Dice Bar --- */
 .dice-bar {
   display: flex;
@@ -420,6 +430,37 @@ button.secondary {
   gap: 10px;
 }
 .toggle-label input { width: auto; }
+
+/* --- Voice Notes --- */
+.notes-body textarea {
+  width: 100%;
+  padding: 12px;
+  min-height: 260px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.35);
+  color: var(--text);
+  resize: vertical;
+}
+
+.notes-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-line,
+.hint-text {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+.status-line {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.25);
+}
 
 /* --- Rules --- */
 #rules-search {

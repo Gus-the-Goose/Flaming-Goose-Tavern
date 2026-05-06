@@ -84,6 +84,31 @@
       </div>
     </div>
 
+    <!-- Voice Notes Modal -->
+    <div id="notes-backdrop" class="modal-backdrop hidden" role="dialog" aria-label="Voice Notes">
+      <div class="modal modal-wide" role="document">
+        <div class="modal-header">
+          <h2>Voice Notes</h2>
+          <button id="notes-close" class="icon-btn" aria-label="Close voice notes">Close</button>
+        </div>
+        <div class="modal-body notes-body">
+          <p id="notes-status" class="status-line" role="status">Ready. Use Start dictation and speak your notes.</p>
+          <div class="notes-actions">
+            <button id="notes-start" type="button" class="secondary">Start dictation</button>
+            <button id="notes-stop" type="button" class="secondary" disabled>Stop</button>
+            <button id="notes-copy" type="button" class="secondary">Copy notes</button>
+            <button id="notes-download" type="button" class="secondary">Download notes</button>
+            <button id="notes-clear" type="button" class="secondary danger-button">Clear notes</button>
+          </div>
+          <label>
+            Session notes
+            <textarea id="notes-text" rows="14" placeholder="Dictated notes will appear here. You can also type corrections if needed."></textarea>
+          </label>
+          <p class="hint-text">Dictation support depends on the browser. Chrome on Android/desktop is usually best; iPhone may need testing.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Campaign / Character Drawer -->
     <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
     <aside id="drawer" class="drawer hidden" role="complementary" aria-label="Campaign & Characters">
@@ -114,6 +139,7 @@
           <p id="campaign-setting" class="hero-copy"></p>
         </div>
         <div class="hero-actions">
+          <button id="notes-btn" class="icon-btn" aria-label="Voice notes" title="Voice notes">Notes</button>
           <button id="rules-btn" class="icon-btn" aria-label="Rules reference" title="Rules">Rules</button>
           <button id="drawer-btn" class="icon-btn" aria-label="Campaign & characters" title="Menu">📋</button>
           <button id="settings-btn" class="icon-btn" aria-label="Accessibility settings" title="Settings">Settings</button>
