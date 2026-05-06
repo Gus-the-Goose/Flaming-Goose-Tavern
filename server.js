@@ -61,7 +61,9 @@ export function createAppServer() {
       if (req.method === "POST" && url.pathname === "/api/message") {
         const body = await readRequestBody(req);
         const state = await readState();
-        const nextState = await applyTurn(state, body);
+        const nextState = await applyTurn(state, body, {
+          onHumanEntry: (intermediateState) => writeState(intermediateState)
+        });
         await writeState(nextState);
         return sendJson(res, 200, nextState);
       }

@@ -233,6 +233,11 @@ button.secondary {
 }
 .log-entry:hover { background: rgba(30, 25, 22, 0.7); }
 
+.log-entry.ooc-entry {
+  border-style: dashed;
+  background: rgba(216, 154, 74, 0.12);
+}
+
 .log-meta {
   display: flex;
   align-items: baseline;
@@ -284,6 +289,25 @@ button.secondary {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: rgba(0,0,0,0.3);
+}
+
+.ooc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.3);
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+.ooc-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
 }
 
 .form-row textarea {

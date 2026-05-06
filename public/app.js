@@ -4,6 +4,12 @@
 
 const state = { data: null };
 
+const REFRESH_INTERVAL_MS = 4000;
+const MESSAGE_ARCHIVE_KEY = "flaming-goose-message-archive";
+const SPOKEN_ARCHIVE_KEY = "flaming-goose-spoken-archive";
+let lastLogSignature = "";
+let refreshTimer = null;
+
 const ABILITY_LABELS = {
   strength: ["Strength", ["athletics"]],
   dexterity: ["Dexterity", ["acrobatics", "sleightOfHand", "stealth"]],
@@ -36,6 +42,62 @@ function setPath(obj, path, value) {
   target[last] = value;
 }
 
+function logSignature(log = []) {
+  return log.map((entry) => entry.id || `${entry.timestamp}-${entry.speakerLabel}-${entry.text}`).join("|");
+}
+
+function readArchive(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeArchive(key, entries) {
+  localStorage.setItem(key, JSON.stringify(entries.slice(-500)));
+}
+
+function archiveLogEntries(entries = []) {
+  const archive = readArchive(MESSAGE_ARCHIVE_KEY);
+  const seen = new Set(archive.map((entry) => entry.id).filter(Boolean));
+  for (const entry of entries) {
+    if (!entry?.text || (entry.id && seen.has(entry.id))) continue;
+    archive.push({
+      id: entry.id,
+      speakerLabel: entry.speakerLabel,
+      target: entry.target,
+      text: entry.text,
+      timestamp: entry.timestamp || new Date().toISOString()
+    });
+    if (entry.id) seen.add(entry.id);
+  }
+  writeArchive(MESSAGE_ARCHIVE_KEY, archive);
+}
+
+function archiveSpokenText(text) {
+  if (!text?.trim()) return;
+  const archive = readArchive(SPOKEN_ARCHIVE_KEY);
+  archive.push({ text: text.trim(), timestamp: new Date().toISOString() });
+  writeArchive(SPOKEN_ARCHIVE_KEY, archive);
+}
+
+function transcriptText() {
+  return readArchive(MESSAGE_ARCHIVE_KEY)
+    .map((entry) => {
+      const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : "";
+      return `[${time}] ${entry.speakerLabel || "Unknown"}: ${entry.text}`;
+    })
+    .join("\n\n");
+}
+
+async function copyTranscript() {
+  const text = transcriptText() || "No archived messages yet.";
+  await navigator.clipboard.writeText(text);
+  alert("Message transcript copied for notes.");
+}
+
 // --- Speaker colour assignment ---
 const speakerColourMap = new Map();
 let speakerIndex = 0;
@@ -58,6 +120,7 @@ const refs = {
   logTemplate: $("#log-entry-template"),
   messageForm: $("#message-form"),
   audienceSelect: $("#audience-select"),
+  oocToggle: $("#ooc-toggle"),
   targetWrap: $("#target-wrap"),
   targetSelect: $("#target-select"),
   messageInput: $("#message-input"),
@@ -108,12 +171,15 @@ async function api(path, options = {}) {
 
 // --- Render: Log ---
 function renderLog(log) {
+  const wasNearBottom = refs.logList.scrollHeight - refs.logList.scrollTop - refs.logList.clientHeight < 80;
   refs.logList.innerHTML = "";
   for (const entry of log) {
     const node = refs.logTemplate.content.cloneNode(true);
     const speakerEl = node.querySelector(".log-speaker");
     speakerEl.textContent = entry.speakerLabel;
     speakerEl.classList.add(getSpeakerClass(entry.speakerLabel));
+    const entryEl = node.querySelector(".log-entry");
+    entryEl.classList.toggle("ooc-entry", entry.speaker === "human-ooc");
     node.querySelector(".log-target").textContent =
       entry.target === "all" ? "" : `→ ${lookupAgentName(entry.target)}`;
     node.querySelector(".log-text").textContent = entry.text;
@@ -128,7 +194,10 @@ function renderLog(log) {
 
     refs.logList.appendChild(node);
   }
-  refs.logList.scrollTop = refs.logList.scrollHeight;
+  lastLogSignature = logSignature(log);
+  if (wasNearBottom) {
+    refs.logList.scrollTop = refs.logList.scrollHeight;
+  }
 }
 
 function lookupAgentName(agentId) {
@@ -293,7 +362,29 @@ function renderAll() {
 
 async function loadState() {
   state.data = await api("/api/state");
+  archiveLogEntries(state.data.log);
   renderAll();
+  startAutoRefresh();
+}
+
+async function refreshState() {
+  if (!state.data) return;
+  const previousIds = new Set((state.data.log || []).map((entry) => entry.id).filter(Boolean));
+  const nextData = await api("/api/state");
+  const newEntries = (nextData.log || []).filter((entry) => entry.id && !previousIds.has(entry.id));
+  archiveLogEntries(newEntries);
+  state.data = nextData;
+  const nextSignature = logSignature(nextData.log);
+  if (nextSignature !== lastLogSignature) {
+    renderLog(nextData.log);
+  }
+}
+
+function startAutoRefresh() {
+  if (refreshTimer) return;
+  refreshTimer = window.setInterval(() => {
+    refreshState().catch((error) => console.warn("Auto-refresh failed", error));
+  }, REFRESH_INTERVAL_MS);
 }
 
 // --- Dice Roller ---
@@ -324,6 +415,7 @@ let ttsActive = false;
 
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
+  archiveSpokenText(text);
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.95;
@@ -365,6 +457,19 @@ function initTtsControl() {
   btn.textContent = "🔇";
   btn.addEventListener("click", toggleTts);
   document.body.appendChild(btn);
+}
+
+function initTranscriptButton() {
+  const actions = document.querySelector(".hero-actions");
+  if (!actions) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "icon-btn";
+  btn.textContent = "📝";
+  btn.title = "Copy message transcript for notes";
+  btn.setAttribute("aria-label", "Copy message transcript for notes");
+  btn.addEventListener("click", () => copyTranscript().catch(() => alert("Could not copy transcript.")));
+  actions.appendChild(btn);
 }
 
 // --- Settings ---
@@ -597,15 +702,41 @@ refs.audienceSelect.addEventListener("change", () => {
 // --- Message form ---
 refs.messageForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const text = refs.messageInput.value;
+  const isOoc = refs.oocToggle.checked;
   const payload = {
     audience: refs.audienceSelect.value,
     targetAgentId: refs.targetSelect.value,
-    text: refs.messageInput.value,
+    messageMode: isOoc ? "ooc" : "ic",
+    text,
   };
   if (!payload.text.trim()) return;
-  state.data = await api("/api/message", { method: "POST", body: JSON.stringify(payload) });
+
+  const previousData = state.data ? structuredClone(state.data) : null;
+  const optimisticEntry = {
+    id: `pending-${Date.now()}`,
+    speaker: isOoc ? "human-ooc" : "human",
+    speakerLabel: isOoc ? "Jason (OOC)" : "You",
+    target: payload.audience === "one" ? payload.targetAgentId : "all",
+    text: payload.text.trim(),
+    timestamp: new Date().toISOString()
+  };
   refs.messageInput.value = "";
-  renderAll();
+  if (state.data) {
+    state.data.log = [...state.data.log, optimisticEntry];
+    renderLog(state.data.log);
+  }
+
+  try {
+    state.data = await api("/api/message", { method: "POST", body: JSON.stringify(payload) });
+    archiveLogEntries(state.data.log);
+    renderAll();
+  } catch (error) {
+    if (previousData) state.data = previousData;
+    refs.messageInput.value = text;
+    renderAll();
+    alert(`Message was not sent: ${error.message}`);
+  }
 });
 
 // --- Campaign form ---
@@ -642,6 +773,7 @@ refs.agentsList.addEventListener("submit", async (e) => {
 // --- Init ---
 initSettings();
 initTtsControl();
+initTranscriptButton();
 loadState().catch((error) => {
   refs.logList.innerHTML = `<article class="log-entry"><p class="log-text">Error loading table: ${error.message}</p></article>`;
 });
