@@ -143,6 +143,12 @@ const refs = {
   setAccentColor: $("#set-accent-color"),
   setBgColor: $("#set-bg-color"),
   setTextColor: $("#set-text-color"),
+  setDiceD4: $("#set-dice-d4"),
+  setDiceD6: $("#set-dice-d6"),
+  setDiceD8: $("#set-dice-d8"),
+  setDiceD10: $("#set-dice-d10"),
+  setDiceD12: $("#set-dice-d12"),
+  setDiceD20: $("#set-dice-d20"),
   // Rules
   rulesBtn: $("#rules-btn"),
   rulesBackdrop: $("#rules-backdrop"),
@@ -160,6 +166,7 @@ const refs = {
   notesDownload: $("#notes-download"),
   notesClear: $("#notes-clear"),
   notesText: $("#notes-text"),
+  copyBtn: $("#copy-btn"),
   // Drawer
   drawerBtn: $("#drawer-btn"),
   drawerBackdrop: $("#drawer-backdrop"),
@@ -221,7 +228,7 @@ function lookupAgentName(agentId) {
 // --- Render: Campaign ---
 function renderCampaign(campaign) {
   refs.title.textContent = state.data.meta?.title || "The Flaming Goose Tavern";
-  refs.setting.textContent = campaign.setting;
+  refs.setting.textContent = "Table Keeper";
   refs.sceneLine.textContent = campaign.currentScene || "No scene set";
 
   const fields = [
@@ -474,16 +481,9 @@ function initTtsControl() {
 }
 
 function initTranscriptButton() {
-  const actions = document.querySelector(".hero-actions");
-  if (!actions) return;
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "icon-btn";
-  btn.textContent = "Copy";
-  btn.title = "Copy message transcript for notes";
-  btn.setAttribute("aria-label", "Copy message transcript for notes");
+  const btn = refs.copyBtn || document.querySelector("#copy-btn");
+  if (!btn) return;
   btn.addEventListener("click", () => copyTranscript().catch(() => alert("Could not copy transcript.")));
-  actions.appendChild(btn);
 }
 
 function appendNote(text) {
@@ -608,23 +608,58 @@ const defaultSettings = {
   accentColor: "#d89a4a",
   bgColor: "#15110f",
   textColor: "#f5ead8",
+  diceD4: "#b86452",
+  diceD6: "#7ec7c4",
+  diceD8: "#8bc34a",
+  diceD10: "#ce93d8",
+  diceD12: "#4fc3f7",
+  diceD20: "#d89a4a",
 };
+
+function hexToRgb(hex) {
+  const normal = String(hex || "").trim().replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(normal)) return { r: 21, g: 17, b: 15 };
+  return {
+    r: parseInt(normal.slice(0, 2), 16),
+    g: parseInt(normal.slice(2, 4), 16),
+    b: parseInt(normal.slice(4, 6), 16),
+  };
+}
+
+function rgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 function loadSettings() {
   try {
-    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { ...defaultSettings };
+    return { ...defaultSettings, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}) };
   } catch {
     return { ...defaultSettings };
   }
 }
 
-function applySettings(s) {
+function applySettings(rawSettings) {
+  const s = { ...defaultSettings, ...rawSettings };
   document.documentElement.style.setProperty("--font-size", s.fontSize + "px");
   document.documentElement.style.setProperty("--font-weight", s.fontWeight);
   document.documentElement.style.setProperty("--font-family", s.fontFamily);
   document.documentElement.style.setProperty("--accent", s.accentColor);
   document.documentElement.style.setProperty("--bg", s.bgColor);
   document.documentElement.style.setProperty("--text", s.textColor);
+  document.documentElement.style.setProperty("--muted", rgba(s.textColor, 0.72));
+  document.documentElement.style.setProperty("--panel", rgba(s.bgColor, 0.9));
+  document.documentElement.style.setProperty("--panel-strong", rgba(s.bgColor, 0.98));
+  document.documentElement.style.setProperty("--input-bg", rgba(s.bgColor, 0.55));
+  document.documentElement.style.setProperty("--border", rgba(s.accentColor, 0.35));
+  document.documentElement.style.setProperty("--accent-glow", rgba(s.accentColor, 0.28));
+  document.documentElement.style.setProperty("--hero-bg", `linear-gradient(135deg, ${rgba(s.bgColor, 0.98)}, ${rgba(s.bgColor, 0.92)})`);
+  document.documentElement.style.setProperty("--dice-d4", s.diceD4);
+  document.documentElement.style.setProperty("--dice-d6", s.diceD6);
+  document.documentElement.style.setProperty("--dice-d8", s.diceD8);
+  document.documentElement.style.setProperty("--dice-d10", s.diceD10);
+  document.documentElement.style.setProperty("--dice-d12", s.diceD12);
+  document.documentElement.style.setProperty("--dice-d20", s.diceD20);
 
   document.body.classList.toggle("high-contrast", s.highContrast);
   document.body.classList.toggle("reduce-motion", s.reduceMotion);
@@ -639,6 +674,12 @@ function applySettings(s) {
   refs.setAccentColor.value = s.accentColor;
   refs.setBgColor.value = s.bgColor;
   refs.setTextColor.value = s.textColor;
+  refs.setDiceD4.value = s.diceD4;
+  refs.setDiceD6.value = s.diceD6;
+  refs.setDiceD8.value = s.diceD8;
+  refs.setDiceD10.value = s.diceD10;
+  refs.setDiceD12.value = s.diceD12;
+  refs.setDiceD20.value = s.diceD20;
 }
 
 function saveSettings(s) {
@@ -660,6 +701,12 @@ function initSettings() {
       accentColor: refs.setAccentColor.value,
       bgColor: refs.setBgColor.value,
       textColor: refs.setTextColor.value,
+      diceD4: refs.setDiceD4.value,
+      diceD6: refs.setDiceD6.value,
+      diceD8: refs.setDiceD8.value,
+      diceD10: refs.setDiceD10.value,
+      diceD12: refs.setDiceD12.value,
+      diceD20: refs.setDiceD20.value,
     };
     saveSettings(s);
   };
@@ -675,6 +722,8 @@ function initSettings() {
   refs.setAccentColor.addEventListener("input", update);
   refs.setBgColor.addEventListener("input", update);
   refs.setTextColor.addEventListener("input", update);
+  [refs.setDiceD4, refs.setDiceD6, refs.setDiceD8, refs.setDiceD10, refs.setDiceD12, refs.setDiceD20]
+    .forEach((input) => input.addEventListener("input", update));
   refs.settingsReset.addEventListener("click", () => saveSettings({ ...defaultSettings }));
 }
 
@@ -847,7 +896,7 @@ refs.messageForm.addEventListener("submit", async (e) => {
   const optimisticEntry = {
     id: `pending-${Date.now()}`,
     speaker: isOoc ? "human-ooc" : "human",
-    speakerLabel: isOoc ? "Jason (OOC)" : "You",
+    speakerLabel: isOoc ? "OOC" : "You",
     target: payload.audience === "one" ? payload.targetAgentId : "all",
     text: payload.text.trim(),
     timestamp: new Date().toISOString()

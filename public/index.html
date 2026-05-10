@@ -21,7 +21,7 @@
       <div class="modal" role="document">
         <div class="modal-header">
           <h2>Accessibility Settings</h2>
-          <button id="settings-close" class="icon-btn" aria-label="Close settings">Close</button>
+          <button id="settings-close" class="icon-btn" aria-label="Close settings">✕</button>
         </div>
         <div class="modal-body">
           <label>
@@ -65,6 +65,17 @@
             Text Colour
             <input type="color" id="set-text-color" value="#f5ead8" />
           </label>
+          <fieldset class="dice-colour-fieldset">
+            <legend>Dice Colours</legend>
+            <div class="dice-colour-grid">
+              <label>d4 <input type="color" id="set-dice-d4" value="#b86452" /></label>
+              <label>d6 <input type="color" id="set-dice-d6" value="#7ec7c4" /></label>
+              <label>d8 <input type="color" id="set-dice-d8" value="#8bc34a" /></label>
+              <label>d10 <input type="color" id="set-dice-d10" value="#ce93d8" /></label>
+              <label>d12 <input type="color" id="set-dice-d12" value="#4fc3f7" /></label>
+              <label>d20 <input type="color" id="set-dice-d20" value="#d89a4a" /></label>
+            </div>
+          </fieldset>
           <button id="settings-reset" class="secondary">Reset to Defaults</button>
         </div>
       </div>
@@ -75,7 +86,7 @@
       <div class="modal modal-wide" role="document">
         <div class="modal-header">
           <h2>Rules Reference</h2>
-          <button id="rules-close" class="icon-btn" aria-label="Close rules">Close</button>
+          <button id="rules-close" class="icon-btn" aria-label="Close rules">✕</button>
         </div>
         <div class="modal-body">
           <input type="search" id="rules-search" placeholder="Search rules..." aria-label="Search rules" />
@@ -88,8 +99,8 @@
     <div id="notes-backdrop" class="modal-backdrop hidden" role="dialog" aria-label="Voice Notes">
       <div class="modal modal-wide" role="document">
         <div class="modal-header">
-          <h2>Voice Notes</h2>
-          <button id="notes-close" class="icon-btn" aria-label="Close voice notes">Close</button>
+          <h2>Session Notes</h2>
+          <button id="notes-close" class="icon-btn" aria-label="Close session notes">✕</button>
         </div>
         <div class="modal-body notes-body">
           <p id="notes-status" class="status-line" role="status">Ready. Use Start dictation and speak your notes.</p>
@@ -113,8 +124,8 @@
     <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
     <aside id="drawer" class="drawer hidden" role="complementary" aria-label="Campaign & Characters">
       <div class="drawer-header">
-        <h2>📋 Campaign</h2>
-        <button id="drawer-close" class="icon-btn" aria-label="Close drawer">Close</button>
+        <h2>🏹 Campaign</h2>
+        <button id="drawer-close" class="icon-btn" aria-label="Close drawer">✕</button>
       </div>
       <div class="drawer-tabs">
         <button class="drawer-tab active" data-tab="campaign">Campaign</button>
@@ -134,15 +145,15 @@
     <div class="shell">
       <header class="hero">
         <div class="hero-text">
-          <p class="eyebrow">The Flaming Goose Tavern</p>
-          <h1 id="campaign-title">Loading table...</h1>
-          <p id="campaign-setting" class="hero-copy"></p>
+          <h1 id="campaign-title">The Flaming Goose Tavern</h1>
+          <p id="campaign-setting" class="hero-copy">Table Keeper</p>
         </div>
-        <div class="hero-actions">
-          <button id="notes-btn" class="icon-btn" aria-label="Voice notes" title="Voice notes">Notes</button>
-          <button id="rules-btn" class="icon-btn" aria-label="Rules reference" title="Rules">Rules</button>
-          <button id="drawer-btn" class="icon-btn" aria-label="Campaign & characters" title="Menu">📋</button>
-          <button id="settings-btn" class="icon-btn" aria-label="Accessibility settings" title="Settings">Settings</button>
+        <div class="hero-actions" aria-label="Table tools">
+          <button id="settings-btn" class="icon-btn" aria-label="Accessibility settings" title="Accessibility settings">⚙️</button>
+          <button id="drawer-btn" class="icon-btn" aria-label="Characters and campaign" title="Characters and campaign">🏹</button>
+          <button id="rules-btn" class="icon-btn" aria-label="Rules reference" title="Rules reference">📒</button>
+          <button id="notes-btn" class="icon-btn" aria-label="Session notes" title="Session notes">📜</button>
+          <button id="copy-btn" class="icon-btn" aria-label="Copy message transcript" title="Copy message transcript">💾</button>
         </div>
       </header>
 
@@ -188,7 +199,7 @@
           </label>
           <label class="ooc-toggle">
             <input type="checkbox" id="ooc-toggle" name="messageMode" value="ooc" />
-            <span>OOC / Jason note</span>
+            <span>OOC</span>
           </label>
         </div>
         <div class="form-row">
@@ -199,7 +210,7 @@
             rows="2"
             placeholder="Address the table..."
           ></textarea>
-          <button type="submit" class="send-btn" aria-label="Send">Send</button>
+          <button type="submit" class="send-btn" aria-label="Send">⏩</button>
         </div>
       </form>
     </div>
@@ -212,7 +223,7 @@
           <span class="log-time"></span>
         </div>
         <p class="log-text"></p>
-        <button class="tts-btn icon-btn small" aria-label="Read aloud" title="Read aloud">Read</button>
+        <button class="tts-btn icon-btn small" aria-label="Read aloud" title="Read aloud">📢</button>
       </article>
     </template>
 
