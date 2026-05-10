@@ -95,10 +95,25 @@ function transcriptText() {
     .join("\n\n");
 }
 
-async function copyTranscript() {
+function downloadTextFile({ text, filename }) {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportTranscript() {
   const text = transcriptText() || "No archived messages yet.";
-  await navigator.clipboard.writeText(text);
-  alert("Message transcript copied to clipboard. The floppy button copies; it does not save to the server.");
+  downloadTextFile({
+    text,
+    filename: `flaming-goose-transcript-${new Date().toISOString().slice(0, 10)}.txt`,
+  });
+  alert("Transcript exported as a text file. Clipboard was not changed.");
 }
 
 // --- Speaker colour assignment ---
@@ -521,7 +536,13 @@ function initTtsControl() {
 function initTranscriptButton() {
   const btn = refs.copyBtn || document.querySelector("#copy-btn");
   if (!btn) return;
-  btn.addEventListener("click", () => copyTranscript().catch(() => alert("Could not copy transcript.")));
+  btn.addEventListener("click", () => {
+    try {
+      exportTranscript();
+    } catch {
+      alert("Could not export transcript.");
+    }
+  });
 }
 
 function appendNote(text) {
@@ -608,16 +629,11 @@ async function copyVoiceNotes() {
 }
 
 function downloadVoiceNotes() {
-  const blob = new Blob([refs.notesText.value || ""], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `flaming-goose-notes-${new Date().toISOString().slice(0, 10)}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  setNotesStatus("Notes downloaded.");
+  downloadTextFile({
+    text: refs.notesText.value || "",
+    filename: `flaming-goose-notes-${new Date().toISOString().slice(0, 10)}.txt`,
+  });
+  setNotesStatus("Notes downloaded. Clipboard was not changed.");
 }
 
 function initVoiceNotes() {
