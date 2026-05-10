@@ -125,7 +125,22 @@ body {
 .scene-banner strong { color: var(--accent); }
 
 /* --- Buttons --- */
-button, input, select, textarea { font: inherit; color: inherit; }
+button, input, select, textarea {
+  font: inherit;
+  color: var(--text);
+}
+
+input:not([type="checkbox"]):not([type="range"]):not([type="color"]),
+select,
+textarea {
+  background: var(--input-bg);
+  border-color: var(--border);
+}
+
+select option {
+  background: var(--panel-strong);
+  color: var(--text);
+}
 
 .icon-btn {
   width: var(--touch);
@@ -152,6 +167,7 @@ button.secondary {
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--panel-strong);
+  color: var(--text);
   cursor: pointer;
   font-weight: 600;
 }
@@ -363,7 +379,7 @@ button.secondary:disabled {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: color-mix(in srgb, var(--bg) 70%, black 30%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -523,6 +539,7 @@ button.secondary:disabled {
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+  background: var(--panel);
 }
 
 .rule-section summary {
@@ -548,6 +565,7 @@ button.secondary:disabled {
   line-height: 1.6;
   word-break: break-word;
   overflow-wrap: break-word;
+  background: var(--panel);
 }
 .rule-section .rule-body ul { padding-left: 20px; }
 .rule-section .rule-body li { margin-bottom: 4px; }
@@ -556,7 +574,7 @@ button.secondary:disabled {
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: color-mix(in srgb, var(--bg) 68%, black 32%);
   z-index: 900;
 }
 
@@ -724,7 +742,7 @@ button.secondary:disabled {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px;
-  background: rgba(255,255,255,0.03);
+  background: var(--input-bg);
 }
 .ability-card legend {
   padding: 0 6px;
@@ -763,12 +781,12 @@ button.secondary:disabled {
 .hidden { display: none !important; }
 
 /* Speaker colours */
-.speaker-0 { color: #7ec7c4; }
-.speaker-1 { color: #d89a4a; }
-.speaker-2 { color: #b86452; }
-.speaker-3 { color: #8bc34a; }
-.speaker-4 { color: #ce93d8; }
-.speaker-5 { color: #4fc3f7; }
+.speaker-0 { color: var(--dice-d6); }
+.speaker-1 { color: var(--dice-d20); }
+.speaker-2 { color: var(--dice-d4); }
+.speaker-3 { color: var(--dice-d8); }
+.speaker-4 { color: var(--dice-d10); }
+.speaker-5 { color: var(--dice-d12); }
 .speaker-system { color: var(--muted); font-style: italic; }
 
 /* --- Responsive --- */

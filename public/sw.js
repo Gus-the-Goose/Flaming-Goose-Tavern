@@ -1,4 +1,4 @@
-const CACHE_NAME = "flaming-goose-v4";
+const CACHE_NAME = "flaming-goose-v5";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
