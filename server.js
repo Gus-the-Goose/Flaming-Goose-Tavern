@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readState, resetState, writeState } from "./lib/storage.js";
+import { getStorageMode, readState, resetState, writeState } from "./lib/storage.js";
 import { applyTurn } from "./lib/table-engine.js";
 
 const port = process.env.PORT || 3000;
@@ -52,6 +52,15 @@ export function createAppServer() {
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
+
+      if (req.method === "GET" && url.pathname === "/api/health") {
+        return sendJson(res, 200, {
+          ok: true,
+          app: "flaming-goose-tavern",
+          storage: getStorageMode(),
+          timestamp: new Date().toISOString()
+        });
+      }
 
       if (req.method === "GET" && url.pathname === "/api/state") {
         const state = await readState();

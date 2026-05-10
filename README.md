@@ -6,9 +6,10 @@ Local-first prototype for a multi-agent D&D table with a simple browser UI, pers
 
 - Node.js built-in HTTP server
 - Static HTML/CSS/JS frontend
-- JSON file persistence
+- Local JSON file persistence for development
+- Optional Turso/libSQL persistence for Railway/cloud deploys
 
-This keeps setup minimal and avoids external dependencies.
+This keeps local setup simple while giving the live app real durable storage when database environment variables are set.
 
 ## Run
 
@@ -32,12 +33,37 @@ npm run dev
 - One local campaign/table view
 - One human participant plus 4 agent slots
 - Optional GM mode toggle and GM notes
-- Persistent campaign state stored in `data/runtime-state.json`
+- Persistent campaign state stored in `data/runtime-state.json` locally, or in Turso/libSQL when configured
 - Example seeded characters and campaign memory
 - Turn-based shared log
 - Human prompts can target the full table or a single character
 - Mock agent reply generator with distinct role/voice prompts
 - Clear adapter boundary for future real LLM integration in `lib/llm-adapter.js`
+
+## Persistence
+
+By default, state is saved to `data/runtime-state.json` for local development.
+
+For Railway/cloud persistence, add these environment variables:
+
+```bash
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-token
+```
+
+Optional:
+
+```bash
+FLAMING_GOOSE_STATE_KEY=default
+```
+
+The app stores the whole campaign/table state as one JSON document in a `flaming_goose_state` table. This preserves campaign notes, logs, character sheets, and GM state across Railway restarts.
+
+Health check:
+
+```bash
+curl /api/health
+```
 
 ## Files
 
