@@ -377,7 +377,7 @@ function renderTargetOptions(agents) {
   for (const agent of agents.filter((a) => a.active)) {
     const opt = document.createElement("option");
     opt.value = agent.id;
-    opt.textContent = `${agent.name} (${agent.classRole})`;
+    opt.textContent = `${agent.name} — ${agent.classRole}`;
     refs.targetSelect.appendChild(opt);
   }
 }
