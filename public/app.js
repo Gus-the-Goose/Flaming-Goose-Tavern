@@ -98,7 +98,7 @@ function transcriptText() {
 async function copyTranscript() {
   const text = transcriptText() || "No archived messages yet.";
   await navigator.clipboard.writeText(text);
-  alert("Message transcript copied for notes.");
+  alert("Message transcript copied to clipboard. The floppy button copies; it does not save to the server.");
 }
 
 // --- Speaker colour assignment ---
@@ -143,12 +143,21 @@ const refs = {
   setAccentColor: $("#set-accent-color"),
   setBgColor: $("#set-bg-color"),
   setTextColor: $("#set-text-color"),
+  setPlayerName: $("#set-player-name"),
+  setCharacterName: $("#set-character-name"),
+  setTtsVoice: $("#set-tts-voice"),
   setDiceD4: $("#set-dice-d4"),
   setDiceD6: $("#set-dice-d6"),
   setDiceD8: $("#set-dice-d8"),
   setDiceD10: $("#set-dice-d10"),
   setDiceD12: $("#set-dice-d12"),
   setDiceD20: $("#set-dice-d20"),
+  setBtnSettings: $("#set-btn-settings"),
+  setBtnDrawer: $("#set-btn-drawer"),
+  setBtnRules: $("#set-btn-rules"),
+  setBtnNotes: $("#set-btn-notes"),
+  setBtnCopy: $("#set-btn-copy"),
+  setBtnSend: $("#set-btn-send"),
   // Rules
   rulesBtn: $("#rules-btn"),
   rulesBackdrop: $("#rules-backdrop"),
@@ -211,7 +220,7 @@ function renderLog(log) {
     }
     // TTS button
     const ttsBtn = node.querySelector(".tts-btn");
-    ttsBtn.addEventListener("click", () => speak(entry.text));
+    ttsBtn.addEventListener("click", () => speakLogEntry(entry));
 
     refs.logList.appendChild(node);
   }
@@ -434,16 +443,39 @@ document.querySelectorAll(".dice-btn").forEach((btn) => {
 // --- TTS (Web Speech API) ---
 let ttsActive = false;
 
+function preferredVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  const pref = loadSettings().ttsVoice;
+  if (!pref || pref === "default") return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const femaleHints = ["female", "samantha", "victoria", "karen", "moira", "tessa", "susan", "zira", "serena", "shelley"];
+  const maleHints = ["male", "daniel", "alex", "oliver", "arthur", "fred", "george", "gordon", "ryan", "tom"];
+  const hints = pref === "male" ? maleHints : femaleHints;
+  const english = voices.filter((voice) => voice.lang?.toLowerCase().startsWith("en"));
+  return english.find((voice) => hints.some((hint) => voice.name.toLowerCase().includes(hint)))
+    || english[0]
+    || voices[0]
+    || null;
+}
+
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
   archiveSpokenText(text);
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
+  const voice = preferredVoice();
+  if (voice) utterance.voice = voice;
   utterance.rate = 0.95;
   utterance.onstart = () => { ttsActive = true; updateTtsControl(); };
   utterance.onend = () => { ttsActive = false; updateTtsControl(); };
   utterance.onerror = () => { ttsActive = false; updateTtsControl(); };
   window.speechSynthesis.speak(utterance);
+}
+
+function speakLogEntry(entry) {
+  const speaker = entry?.speakerLabel ? `${entry.speakerLabel}. ` : "";
+  speak(`${speaker}${entry?.text || ""}`);
 }
 
 function toggleTts() {
@@ -475,7 +507,7 @@ function initTtsControl() {
   btn.id = "tts-control";
   btn.className = "icon-btn small hidden";
   btn.style.cssText = "position:fixed;bottom:12px;right:12px;z-index:800;background:var(--accent);color:var(--bg);font-size:0.8em;font-weight:700;";
-  btn.textContent = "Read aloud";
+  btn.textContent = "📢";
   btn.addEventListener("click", toggleTts);
   document.body.appendChild(btn);
 }
@@ -566,7 +598,7 @@ function stopDictation() {
 
 async function copyVoiceNotes() {
   await navigator.clipboard.writeText(refs.notesText.value || "");
-  setNotesStatus("Notes copied.");
+  setNotesStatus("Notes copied to clipboard. They are also saved on this device/browser.");
 }
 
 function downloadVoiceNotes() {
@@ -608,12 +640,21 @@ const defaultSettings = {
   accentColor: "#d89a4a",
   bgColor: "#15110f",
   textColor: "#f5ead8",
+  playerName: "",
+  characterName: "",
+  ttsVoice: "default",
   diceD4: "#b86452",
   diceD6: "#7ec7c4",
   diceD8: "#8bc34a",
   diceD10: "#ce93d8",
   diceD12: "#4fc3f7",
   diceD20: "#d89a4a",
+  btnSettings: "#2a1e18",
+  btnDrawer: "#2a1e18",
+  btnRules: "#2a1e18",
+  btnNotes: "#2a1e18",
+  btnCopy: "#2a1e18",
+  btnSend: "#d89a4a",
 };
 
 function hexToRgb(hex) {
@@ -660,6 +701,12 @@ function applySettings(rawSettings) {
   document.documentElement.style.setProperty("--dice-d10", s.diceD10);
   document.documentElement.style.setProperty("--dice-d12", s.diceD12);
   document.documentElement.style.setProperty("--dice-d20", s.diceD20);
+  document.documentElement.style.setProperty("--btn-settings", s.btnSettings);
+  document.documentElement.style.setProperty("--btn-drawer", s.btnDrawer);
+  document.documentElement.style.setProperty("--btn-rules", s.btnRules);
+  document.documentElement.style.setProperty("--btn-notes", s.btnNotes);
+  document.documentElement.style.setProperty("--btn-copy", s.btnCopy);
+  document.documentElement.style.setProperty("--btn-send", s.btnSend);
 
   document.body.classList.toggle("high-contrast", s.highContrast);
   document.body.classList.toggle("reduce-motion", s.reduceMotion);
@@ -674,12 +721,21 @@ function applySettings(rawSettings) {
   refs.setAccentColor.value = s.accentColor;
   refs.setBgColor.value = s.bgColor;
   refs.setTextColor.value = s.textColor;
+  refs.setPlayerName.value = s.playerName;
+  refs.setCharacterName.value = s.characterName;
+  refs.setTtsVoice.value = s.ttsVoice;
   refs.setDiceD4.value = s.diceD4;
   refs.setDiceD6.value = s.diceD6;
   refs.setDiceD8.value = s.diceD8;
   refs.setDiceD10.value = s.diceD10;
   refs.setDiceD12.value = s.diceD12;
   refs.setDiceD20.value = s.diceD20;
+  refs.setBtnSettings.value = s.btnSettings;
+  refs.setBtnDrawer.value = s.btnDrawer;
+  refs.setBtnRules.value = s.btnRules;
+  refs.setBtnNotes.value = s.btnNotes;
+  refs.setBtnCopy.value = s.btnCopy;
+  refs.setBtnSend.value = s.btnSend;
 }
 
 function saveSettings(s) {
@@ -701,12 +757,21 @@ function initSettings() {
       accentColor: refs.setAccentColor.value,
       bgColor: refs.setBgColor.value,
       textColor: refs.setTextColor.value,
+      playerName: refs.setPlayerName.value.trim(),
+      characterName: refs.setCharacterName.value.trim(),
+      ttsVoice: refs.setTtsVoice.value,
       diceD4: refs.setDiceD4.value,
       diceD6: refs.setDiceD6.value,
       diceD8: refs.setDiceD8.value,
       diceD10: refs.setDiceD10.value,
       diceD12: refs.setDiceD12.value,
       diceD20: refs.setDiceD20.value,
+      btnSettings: refs.setBtnSettings.value,
+      btnDrawer: refs.setBtnDrawer.value,
+      btnRules: refs.setBtnRules.value,
+      btnNotes: refs.setBtnNotes.value,
+      btnCopy: refs.setBtnCopy.value,
+      btnSend: refs.setBtnSend.value,
     };
     saveSettings(s);
   };
@@ -722,8 +787,13 @@ function initSettings() {
   refs.setAccentColor.addEventListener("input", update);
   refs.setBgColor.addEventListener("input", update);
   refs.setTextColor.addEventListener("input", update);
-  [refs.setDiceD4, refs.setDiceD6, refs.setDiceD8, refs.setDiceD10, refs.setDiceD12, refs.setDiceD20]
-    .forEach((input) => input.addEventListener("input", update));
+  refs.setPlayerName.addEventListener("input", update);
+  refs.setCharacterName.addEventListener("input", update);
+  refs.setTtsVoice.addEventListener("change", update);
+  [
+    refs.setDiceD4, refs.setDiceD6, refs.setDiceD8, refs.setDiceD10, refs.setDiceD12, refs.setDiceD20,
+    refs.setBtnSettings, refs.setBtnDrawer, refs.setBtnRules, refs.setBtnNotes, refs.setBtnCopy, refs.setBtnSend
+  ].forEach((input) => input.addEventListener("input", update));
   refs.settingsReset.addEventListener("click", () => saveSettings({ ...defaultSettings }));
 }
 
@@ -879,15 +949,39 @@ refs.audienceSelect.addEventListener("change", () => {
   refs.targetWrap.classList.toggle("hidden", refs.audienceSelect.value !== "one");
 });
 
+function localSpeakerLabel(isOoc, settings = loadSettings()) {
+  const playerName = settings.playerName?.trim();
+  const characterName = settings.characterName?.trim();
+  if (isOoc) return playerName ? `${playerName} (OOC)` : "OOC";
+  if (characterName && playerName) return `${characterName} (${playerName})`;
+  if (characterName) return characterName;
+  if (playerName) return playerName;
+  return "You";
+}
+
+function promptForPlayerIdentityIfNeeded() {
+  const settings = loadSettings();
+  if (settings.playerName && settings.characterName) return;
+  window.setTimeout(() => {
+    if (loadSettings().playerName && loadSettings().characterName) return;
+    openModal(refs.settingsBackdrop);
+    refs.setPlayerName.focus();
+  }, 600);
+}
+
 // --- Message form ---
 refs.messageForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const text = refs.messageInput.value;
   const isOoc = refs.oocToggle.checked;
+  const settings = loadSettings();
+  const speakerLabel = localSpeakerLabel(isOoc, settings);
   const payload = {
     audience: refs.audienceSelect.value,
     targetAgentId: refs.targetSelect.value,
     messageMode: isOoc ? "ooc" : "ic",
+    playerName: settings.playerName,
+    characterName: settings.characterName,
     text,
   };
   if (!payload.text.trim()) return;
@@ -896,7 +990,7 @@ refs.messageForm.addEventListener("submit", async (e) => {
   const optimisticEntry = {
     id: `pending-${Date.now()}`,
     speaker: isOoc ? "human-ooc" : "human",
-    speakerLabel: isOoc ? "OOC" : "You",
+    speakerLabel,
     target: payload.audience === "one" ? payload.targetAgentId : "all",
     text: payload.text.trim(),
     timestamp: new Date().toISOString()
@@ -952,6 +1046,8 @@ refs.agentsList.addEventListener("submit", async (e) => {
 
 // --- Init ---
 initSettings();
+promptForPlayerIdentityIfNeeded();
+if ("speechSynthesis" in window) window.speechSynthesis.onvoiceschanged = () => preferredVoice();
 initTtsControl();
 initTranscriptButton();
 initVoiceNotes();

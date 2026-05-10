@@ -19,6 +19,12 @@
   --dice-d10: #ce93d8;
   --dice-d12: #4fc3f7;
   --dice-d20: #d89a4a;
+  --btn-settings: rgba(42, 30, 24, 0.92);
+  --btn-drawer: rgba(42, 30, 24, 0.92);
+  --btn-rules: rgba(42, 30, 24, 0.92);
+  --btn-notes: rgba(42, 30, 24, 0.92);
+  --btn-copy: rgba(42, 30, 24, 0.92);
+  --btn-send: #d89a4a;
   --danger: #b86452;
   --success: #5a9e6f;
   --hero-bg: linear-gradient(135deg, rgba(35, 23, 18, 0.97), rgba(20, 16, 14, 0.97));
@@ -161,6 +167,12 @@ select option {
 .icon-btn:active { transform: scale(0.95); }
 .icon-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .icon-btn.small { width: 36px; height: 36px; font-size: 0.9em; border-radius: 8px; }
+
+#settings-btn { background: var(--btn-settings); }
+#drawer-btn { background: var(--btn-drawer); }
+#rules-btn { background: var(--btn-rules); }
+#notes-btn { background: var(--btn-notes); }
+#copy-btn { background: var(--btn-copy); }
 
 button.secondary {
   padding: 10px 16px;
@@ -363,7 +375,7 @@ button.secondary:disabled {
   min-height: var(--touch);
   border: 0;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--btn-send);
   color: var(--bg);
   font-size: 1.25rem;
   font-weight: 700;
@@ -442,31 +454,40 @@ button.secondary:disabled {
   cursor: pointer;
 }
 
-.dice-colour-fieldset {
+.settings-fieldset {
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
 }
 
-.dice-colour-fieldset legend {
+.settings-fieldset legend {
   padding: 0 6px;
   color: var(--muted);
 }
 
-.dice-colour-grid {
+.settings-fieldset input[type="text"],
+.settings-fieldset select {
+  width: 100%;
+  padding: 10px 12px;
+  min-height: var(--touch);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.colour-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.dice-colour-grid label {
+.colour-grid label {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 8px;
 }
 
-.dice-colour-grid input[type="color"] {
+.colour-grid input[type="color"] {
   height: 40px;
 }
 

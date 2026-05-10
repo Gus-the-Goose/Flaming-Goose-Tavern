@@ -45,6 +45,29 @@
               <option value="Georgia, serif">Georgia</option>
             </select>
           </label>
+          <fieldset class="settings-fieldset">
+            <legend>Player Identity</legend>
+            <label>
+              Player name
+              <input id="set-player-name" type="text" autocomplete="name" placeholder="Anna, Jason, Viola..." />
+            </label>
+            <label>
+              Character name
+              <input id="set-character-name" type="text" placeholder="Bethali, Locke..." />
+            </label>
+            <p class="hint-text">Stored on this device. Messages will show as Character (Player), or Player (OOC).</p>
+          </fieldset>
+          <fieldset class="settings-fieldset">
+            <legend>Speech</legend>
+            <label>
+              Read-aloud voice
+              <select id="set-tts-voice">
+                <option value="default">Default browser voice</option>
+                <option value="female">Female voice if available</option>
+                <option value="male">Male voice if available</option>
+              </select>
+            </label>
+          </fieldset>
           <label class="toggle-label">
             <input type="checkbox" id="set-high-contrast" />
             <span>High Contrast Mode</span>
@@ -65,15 +88,26 @@
             Text Colour
             <input type="color" id="set-text-color" value="#f5ead8" />
           </label>
-          <fieldset class="dice-colour-fieldset">
+          <fieldset class="settings-fieldset colour-fieldset">
             <legend>Dice Colours</legend>
-            <div class="dice-colour-grid">
+            <div class="colour-grid">
               <label>d4 <input type="color" id="set-dice-d4" value="#b86452" /></label>
               <label>d6 <input type="color" id="set-dice-d6" value="#7ec7c4" /></label>
               <label>d8 <input type="color" id="set-dice-d8" value="#8bc34a" /></label>
               <label>d10 <input type="color" id="set-dice-d10" value="#ce93d8" /></label>
               <label>d12 <input type="color" id="set-dice-d12" value="#4fc3f7" /></label>
               <label>d20 <input type="color" id="set-dice-d20" value="#d89a4a" /></label>
+            </div>
+          </fieldset>
+          <fieldset class="settings-fieldset colour-fieldset">
+            <legend>Button Colours</legend>
+            <div class="colour-grid">
+              <label>⚙️ <input type="color" id="set-btn-settings" value="#2a1e18" /></label>
+              <label>🏹 <input type="color" id="set-btn-drawer" value="#2a1e18" /></label>
+              <label>📒 <input type="color" id="set-btn-rules" value="#2a1e18" /></label>
+              <label>📜 <input type="color" id="set-btn-notes" value="#2a1e18" /></label>
+              <label>💾 <input type="color" id="set-btn-copy" value="#2a1e18" /></label>
+              <label>⏩ <input type="color" id="set-btn-send" value="#d89a4a" /></label>
             </div>
           </fieldset>
           <button id="settings-reset" class="secondary">Reset to Defaults</button>
@@ -153,7 +187,7 @@
           <button id="drawer-btn" class="icon-btn" aria-label="Characters and campaign" title="Characters and campaign">🏹</button>
           <button id="rules-btn" class="icon-btn" aria-label="Rules reference" title="Rules reference">📒</button>
           <button id="notes-btn" class="icon-btn" aria-label="Session notes" title="Session notes">📜</button>
-          <button id="copy-btn" class="icon-btn" aria-label="Copy message transcript" title="Copy message transcript">💾</button>
+          <button id="copy-btn" class="icon-btn" aria-label="Copy message transcript" title="Copy message transcript to clipboard">💾</button>
         </div>
       </header>
 
