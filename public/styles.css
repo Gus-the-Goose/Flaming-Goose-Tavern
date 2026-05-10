@@ -110,6 +110,7 @@ body {
 }
 
 .hero-copy { color: var(--muted); font-size: 0.85em; }
+.hero-copy:empty { display: none; }
 
 .hero-actions {
   display: flex;
@@ -302,17 +303,23 @@ button.secondary:disabled {
   white-space: pre-wrap;
   line-height: 1.5;
   font-size: 1em;
-  padding-right: 40px;
+  padding-right: 84px;
 }
 
-.tts-btn {
+.tts-actions {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  opacity: 0.5;
+  display: flex;
+  gap: 6px;
+}
+
+.tts-actions .icon-btn {
+  opacity: 0.55;
   transition: opacity 0.15s;
 }
-.log-entry:hover .tts-btn, .tts-btn:focus-visible { opacity: 1; }
+.log-entry:hover .tts-actions .icon-btn,
+.tts-actions .icon-btn:focus-visible { opacity: 1; }
 
 /* --- Message Form --- */
 .message-form {

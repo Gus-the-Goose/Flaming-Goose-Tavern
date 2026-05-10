@@ -62,11 +62,19 @@ function writeArchive(key, entries) {
   localStorage.setItem(key, JSON.stringify(entries.slice(-500)));
 }
 
+function isDefaultWelcomeEntry(entry = {}) {
+  const text = String(entry.text || "").toLowerCase();
+  return entry.id === "seed-1"
+    || (entry.speakerLabel === "Table Keeper"
+      && text.includes("welcome to the flaming goose tavern")
+      && text.includes("accessibility"));
+}
+
 function archiveLogEntries(entries = []) {
-  const archive = readArchive(MESSAGE_ARCHIVE_KEY);
+  const archive = readArchive(MESSAGE_ARCHIVE_KEY).filter((entry) => !isDefaultWelcomeEntry(entry));
   const seen = new Set(archive.map((entry) => entry.id).filter(Boolean));
   for (const entry of entries) {
-    if (!entry?.text || (entry.id && seen.has(entry.id))) continue;
+    if (!entry?.text || isDefaultWelcomeEntry(entry) || (entry.id && seen.has(entry.id))) continue;
     archive.push({
       id: entry.id,
       speakerLabel: entry.speakerLabel,
@@ -88,6 +96,7 @@ function archiveSpokenText(text) {
 
 function transcriptText() {
   return readArchive(MESSAGE_ARCHIVE_KEY)
+    .filter((entry) => !isDefaultWelcomeEntry(entry))
     .map((entry) => {
       const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : "";
       return `[${time}] ${entry.speakerLabel || "Unknown"}: ${entry.text}`;
@@ -113,7 +122,7 @@ function exportTranscript() {
     text,
     filename: `flaming-goose-transcript-${new Date().toISOString().slice(0, 10)}.txt`,
   });
-  alert("Transcript exported as a text file. Clipboard was not changed.");
+  alert("Transcript exported as a text file. Your browser/device should save it in Downloads. Clipboard was not changed.");
 }
 
 // --- Speaker colour assignment ---
@@ -233,9 +242,11 @@ function renderLog(log) {
       const d = new Date(entry.timestamp);
       timeEl.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
-    // TTS button
+    // TTS buttons
     const ttsBtn = node.querySelector(".tts-btn");
+    const ttsStopBtn = node.querySelector(".tts-stop-btn");
     ttsBtn.addEventListener("click", () => speakLogEntry(entry));
+    ttsStopBtn.addEventListener("click", stopSpeaking);
 
     refs.logList.appendChild(node);
   }
@@ -252,7 +263,7 @@ function lookupAgentName(agentId) {
 // --- Render: Campaign ---
 function renderCampaign(campaign) {
   refs.title.textContent = state.data.meta?.title || "The Flaming Goose Tavern";
-  refs.setting.textContent = "Table Keeper";
+  refs.setting.textContent = "";
   refs.sceneLine.textContent = campaign.currentScene || "No scene set";
 
   const fields = [
@@ -499,6 +510,13 @@ function speakLogEntry(entry) {
   speak(`${speaker}${entry?.text || ""}`);
 }
 
+function stopSpeaking() {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  ttsActive = false;
+  updateTtsControl();
+}
+
 function toggleTts() {
   if (!("speechSynthesis" in window)) return;
   if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
@@ -633,7 +651,7 @@ function downloadVoiceNotes() {
     text: refs.notesText.value || "",
     filename: `flaming-goose-notes-${new Date().toISOString().slice(0, 10)}.txt`,
   });
-  setNotesStatus("Notes downloaded. Clipboard was not changed.");
+  setNotesStatus("Notes downloaded to your browser/device Downloads folder. Clipboard was not changed.");
 }
 
 function initVoiceNotes() {
