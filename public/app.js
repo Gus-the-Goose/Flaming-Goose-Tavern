@@ -372,12 +372,18 @@ function renderCharacterSheet(sheet) {
   `;
 }
 
+function humaniseClassRole(classRole = "") {
+  return String(classRole)
+    .replace(/\s*\((level\s+\d+)\)/i, " -$1")
+    .toLowerCase();
+}
+
 function renderTargetOptions(agents) {
   refs.targetSelect.innerHTML = "";
   for (const agent of agents.filter((a) => a.active)) {
     const opt = document.createElement("option");
     opt.value = agent.id;
-    opt.textContent = `${agent.name} — ${agent.classRole}`;
+    opt.textContent = `${agent.name} (${humaniseClassRole(agent.classRole)})`;
     refs.targetSelect.appendChild(opt);
   }
 }
