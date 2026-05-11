@@ -172,6 +172,7 @@ const refs = {
   setCharacterName: $("#set-character-name"),
   setTtsVoice: $("#set-tts-voice"),
   setVoiceoverMode: $("#set-voiceover-mode"),
+  voiceoverGuideBtn: $("#voiceover-guide-btn"),
   setDiceD4: $("#set-dice-d4"),
   setDiceD6: $("#set-dice-d6"),
   setDiceD8: $("#set-dice-d8"),
@@ -190,6 +191,7 @@ const refs = {
   rulesBackdrop: $("#rules-backdrop"),
   rulesClose: $("#rules-close"),
   rulesSearch: $("#rules-search"),
+  rulesReadBtn: $("#rules-read-btn"),
   rulesContent: $("#rules-content"),
   // Notes
   notesBtn: $("#notes-btn"),
@@ -464,8 +466,8 @@ function rollDie(sides) {
   refs.diceResult.textContent = display;
   refs.diceResult.classList.remove("hidden");
 
-  // Also speak it
-  speak(`Rolled ${total} on a d ${sides}`);
+  const modifierText = mod === 0 ? "with no modifier" : `${mod > 0 ? "plus" : "minus"} ${Math.abs(mod)}`;
+  speak(`Rolled a d ${sides}. Natural ${result}, ${modifierText}, total ${total}.`);
 
   return total;
 }
@@ -479,6 +481,8 @@ document.querySelectorAll(".dice-btn").forEach((btn) => {
 // --- TTS (Web Speech API) ---
 let ttsActive = false;
 let ttsQueue = [];
+let guideItems = [];
+let guideIndex = 0;
 
 function preferredVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -545,12 +549,54 @@ function speakLogEntry(entry) {
   speak(`${speaker}${entry?.text || ""}`);
 }
 
+function clearVoiceoverHighlights() {
+  document.querySelectorAll(".voiceover-highlight").forEach((el) => el.classList.remove("voiceover-highlight"));
+}
+
 function stopSpeaking() {
   if (!("speechSynthesis" in window)) return;
   ttsQueue = [];
+  guideItems = [];
+  guideIndex = 0;
+  clearVoiceoverHighlights();
   window.speechSynthesis.cancel();
   ttsActive = false;
   updateTtsControl();
+}
+
+function speakGuideItem() {
+  if (!("speechSynthesis" in window)) return;
+  clearVoiceoverHighlights();
+  const item = guideItems[guideIndex++];
+  if (!item) {
+    ttsActive = false;
+    updateTtsControl();
+    return;
+  }
+  const element = item.element;
+  if (element) {
+    element.classList.add("voiceover-highlight");
+    element.scrollIntoView({ block: "center", inline: "nearest", behavior: loadSettings().reduceMotion ? "auto" : "smooth" });
+    if (typeof element.focus === "function") element.focus({ preventScroll: true });
+  }
+  const utterance = new SpeechSynthesisUtterance(item.text);
+  const voice = preferredVoice();
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.92;
+  utterance.onstart = () => { ttsActive = true; updateTtsControl(); };
+  utterance.onend = speakGuideItem;
+  utterance.onerror = () => { clearVoiceoverHighlights(); ttsActive = false; guideItems = []; updateTtsControl(); };
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakGuide(items) {
+  if (!("speechSynthesis" in window)) return;
+  archiveSpokenText(items.map((item) => item.text).join("\n"));
+  ttsQueue = [];
+  guideItems = items.filter((item) => item?.text);
+  guideIndex = 0;
+  window.speechSynthesis.cancel();
+  speakGuideItem();
 }
 
 function pageSpeechText() {
@@ -575,6 +621,40 @@ function pageSpeechText() {
 
 function speakPage() {
   speak(pageSpeechText());
+}
+
+function startControlGuide() {
+  closeModal(refs.settingsBackdrop);
+  const diceButtons = Array.from(document.querySelectorAll(".dice-btn"));
+  const items = [
+    { element: refs.readPageBtn, text: "Read page aloud. This reads the title, current scene, latest dice result, and recent table messages." },
+    { element: refs.settingsBtn, text: "Accessibility settings. Change font, colours, player identity, speech voice, and voiceover mode here." },
+    { element: refs.drawerBtn, text: "Campaign and characters. This opens the campaign notes and character sheets." },
+    { element: refs.rulesBtn, text: "Rules reference. This opens searchable Dungeons and Dragons rules help. Inside it, use Read rules choices aloud to hear the rule topics." },
+    { element: refs.notesBtn, text: "Session notes. This opens dictation and notes tools for the session." },
+    { element: refs.copyBtn, text: "Export transcript. This downloads the table message transcript as a text file." },
+    ...diceButtons.map((button) => ({ element: button, text: `Roll ${button.textContent}. Press this to roll a ${button.textContent}. The result will be spoken aloud.` })),
+    { element: refs.diceMod, text: "Dice modifier. Put a positive or negative number here before rolling, for example plus two or minus one." },
+    { element: refs.audienceSelect, text: "Audience. Choose whether your message goes to the whole table or one character." },
+    { element: refs.oocToggle, text: "O O C toggle. Turn this on when you are speaking out of character." },
+    { element: refs.messageInput, text: "Message box. Type your table message here." },
+    { element: refs.messageForm.querySelector(".send-btn"), text: "Send button. Press this arrow to send your message." },
+  ];
+  speakGuide(items);
+}
+
+function startRulesGuide() {
+  const visibleSections = Array.from(refs.rulesContent.querySelectorAll(".rule-section"))
+    .filter((section) => section.style.display !== "none");
+  const items = [
+    { element: refs.rulesSearch, text: "Rules search. Type a word here to filter the rules list, for example attack, advantage, or rest." },
+    ...visibleSections.map((section) => {
+      const title = section.querySelector("summary")?.textContent?.trim() || "Rule section";
+      const body = section.querySelector(".rule-body")?.textContent?.replace(/\s+/g, " ").trim() || "";
+      return { element: section, text: `${title}. ${body}` };
+    }),
+  ];
+  speakGuide(items);
 }
 
 function speakNewEntriesIfVoiceoverMode(entries = []) {
@@ -923,13 +1003,19 @@ function openModal(backdrop) { backdrop.classList.remove("hidden"); }
 function closeModal(backdrop) { backdrop.classList.add("hidden"); }
 
 refs.readPageBtn.addEventListener("click", speakPage);
+refs.voiceoverGuideBtn.addEventListener("click", startControlGuide);
 refs.settingsBtn.addEventListener("click", () => openModal(refs.settingsBackdrop));
 refs.settingsClose.addEventListener("click", () => closeModal(refs.settingsBackdrop));
 refs.settingsBackdrop.addEventListener("click", (e) => {
   if (e.target === refs.settingsBackdrop) closeModal(refs.settingsBackdrop);
 });
 
-refs.rulesBtn.addEventListener("click", () => { buildRules(); openModal(refs.rulesBackdrop); });
+refs.rulesBtn.addEventListener("click", () => {
+  buildRules();
+  openModal(refs.rulesBackdrop);
+  if (loadSettings().voiceoverMode) speak("Rules reference opened. Use the search box, or press Read rules choices aloud to hear the available rule topics.");
+});
+refs.rulesReadBtn.addEventListener("click", startRulesGuide);
 refs.rulesClose.addEventListener("click", () => closeModal(refs.rulesBackdrop));
 refs.rulesBackdrop.addEventListener("click", (e) => {
   if (e.target === refs.rulesBackdrop) closeModal(refs.rulesBackdrop);

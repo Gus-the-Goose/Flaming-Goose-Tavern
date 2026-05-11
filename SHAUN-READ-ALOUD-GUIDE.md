@@ -49,7 +49,61 @@ You can turn this off again any time by going back to **Settings → Speech** an
 
 ---
 
-## 4. Choose a voice
+## 4. Get guided through the buttons
+
+If you want the app to tell you what the main buttons do:
+
+1. Press **⚙️ Settings**.
+2. Find **Speech**.
+3. Press **Guide me through the buttons**.
+
+The app will move through the main controls one at a time. Each control will be highlighted while it is spoken aloud.
+
+This includes:
+
+- the read-aloud button
+- settings
+- campaign and characters
+- rules reference
+- session notes
+- export transcript
+- dice buttons
+- dice modifier
+- message box
+- send button
+
+---
+
+## 5. Use read-aloud with dice
+
+When you press a dice button, the app should speak the roll result aloud.
+
+For example, it may say:
+
+> Rolled a d20. Natural 13, plus 2, total 15.
+
+If you need a modifier, type it in the **± Mod** box before rolling.
+
+---
+
+## 6. Use read-aloud with rules
+
+1. Press the **📒 Rules** button.
+2. Press **Read rules choices aloud**.
+
+The app will move through the visible rules topics and highlight each section while it reads it.
+
+You can also type in the search box first, for example:
+
+- attack
+- advantage
+- rest
+
+Then press **Read rules choices aloud** to hear only the matching rules.
+
+---
+
+## 7. Choose a voice
 
 In **Settings → Speech**, there is also a **Read-aloud voice** option.
 
@@ -63,7 +117,7 @@ The exact voices depend on your phone, tablet, or computer.
 
 ---
 
-## 5. Reading one message at a time
+## 8. Reading one message at a time
 
 Each table message also has its own small **📢** button.
 
@@ -71,7 +125,7 @@ Press that button if you only want to hear that one message, instead of the whol
 
 ---
 
-## 6. Put the app on an iPhone home screen
+## 9. Put the app on an iPhone home screen
 
 This is not an App Store app yet, but you can add it to your iPhone or iPad home screen so it feels more like an app.
 
@@ -87,7 +141,7 @@ After that, you should have a Flaming Goose Tavern icon on your home screen.
 
 ---
 
-## 7. If speech does not work
+## 10. If speech does not work
 
 Try these in order:
 
@@ -100,7 +154,7 @@ Try these in order:
 
 ---
 
-## 8. What to tell Anna if something is wrong
+## 11. What to tell Anna if something is wrong
 
 If it still does not work, tell Anna:
 
