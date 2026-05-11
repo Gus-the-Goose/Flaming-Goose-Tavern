@@ -90,23 +90,41 @@ body {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border: 3px solid transparent;
+  border: 4px solid var(--accent);
   border-radius: 18px 18px 26px 26px;
-  background:
-    var(--hero-bg) padding-box,
-    repeating-linear-gradient(90deg, var(--accent) 0 12px, var(--tile-cream) 12px 18px, var(--tile-accent) 18px 30px, var(--tile-cream) 30px 36px) border-box;
+  background: var(--hero-bg);
   box-shadow: var(--shadow), inset 0 0 0 2px var(--border);
   overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 5px;
+  background: repeating-conic-gradient(
+    from 45deg,
+    var(--accent) 0 25%,
+    var(--tile-cream) 0 50%,
+    var(--tile-accent) 0 75%,
+    var(--tile-cream) 0 100%
+  ) 0 0 / 18px 18px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .hero::after {
   content: "";
   position: absolute;
-  inset: 7px;
-  border: 1px dashed color-mix(in srgb, var(--accent) 75%, white 25%);
-  border-radius: 12px 12px 20px 20px;
+  inset: 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, white 30%);
+  border-radius: 10px 10px 18px 18px;
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 0.55;
 }
 
 .hero-text {
@@ -160,12 +178,36 @@ body {
 .scene-banner {
   padding: 10px 16px;
   border-radius: var(--radius);
-  background:
-    linear-gradient(var(--accent-glow), var(--accent-glow)) padding-box,
-    repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 16px, var(--tile-accent) 16px 26px, transparent 26px 32px) border-box;
-  border: 2px solid transparent;
+  position: relative;
+  background: color-mix(in srgb, var(--bg) 72%, var(--accent) 28%);
+  border: 3px solid var(--accent);
   box-shadow: inset 0 0 0 1px var(--border);
   font-size: 0.9em;
+}
+
+.scene-banner::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 4px;
+  background: repeating-conic-gradient(
+    from 45deg,
+    var(--accent) 0 25%,
+    var(--tile-cream) 0 50%,
+    var(--tile-accent) 0 75%,
+    var(--tile-cream) 0 100%
+  ) 0 0 / 16px 16px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.scene-banner > * {
+  position: relative;
+  z-index: 1;
 }
 
 .scene-banner strong { color: var(--accent); }
