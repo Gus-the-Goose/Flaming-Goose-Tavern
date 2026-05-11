@@ -12,6 +12,8 @@
   --muted: #d9c7a6;
   --accent: #f2c356;
   --accent-glow: rgba(242, 195, 86, 0.28);
+  --grid-line: rgba(255, 241, 214, 0.09);
+  --grid-shadow: rgba(0, 83, 88, 0.12);
   --input-bg: rgba(0, 83, 88, 0.58);
   --dice-d4: #d85b3e;
   --dice-d6: #20a6a4;
@@ -58,7 +60,14 @@ body {
   font-size: var(--font-size);
   font-weight: var(--font-weight);
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(var(--grid-shadow) 2px, transparent 2px),
+    linear-gradient(90deg, var(--grid-shadow) 2px, transparent 2px);
+  background-size: 112px 112px, 112px 112px, 112px 112px, 112px 112px;
+  background-position: 8px 8px, 8px 8px, 10px 10px, 10px 10px;
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
@@ -342,9 +351,13 @@ button.secondary:disabled {
   padding: 12px;
   border: 3px solid var(--border);
   border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, var(--accent-glow), var(--panel)),
-    var(--panel);
+  background-color: var(--panel);
+  background-image:
+    linear-gradient(180deg, var(--accent-glow), transparent),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: auto, 96px 96px, 96px 96px;
+  background-position: 0 0, 4px 4px, 4px 4px;
   scroll-behavior: smooth;
 }
 

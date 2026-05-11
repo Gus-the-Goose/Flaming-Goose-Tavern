@@ -734,6 +734,8 @@ function applySettings(rawSettings) {
   document.documentElement.style.setProperty("--input-bg", rgba(s.bgColor, 0.55));
   document.documentElement.style.setProperty("--border", rgba(s.accentColor, 0.48));
   document.documentElement.style.setProperty("--accent-glow", rgba(s.accentColor, 0.28));
+  document.documentElement.style.setProperty("--grid-line", rgba(s.textColor, 0.09));
+  document.documentElement.style.setProperty("--grid-shadow", rgba(s.bgColor, 0.18));
   document.documentElement.style.setProperty("--tile-accent", "#ff5e42");
   document.documentElement.style.setProperty("--tile-cream", "#20a6a4");
   document.documentElement.style.setProperty("--hero-bg", `linear-gradient(135deg, ${rgba(s.bgColor, 0.98)}, ${rgba(s.bgColor, 0.92)})`);
