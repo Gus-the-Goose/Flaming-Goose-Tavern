@@ -677,24 +677,24 @@ const defaultSettings = {
   fontFamily: "'Merriweather', Georgia, serif",
   highContrast: false,
   reduceMotion: false,
-  accentColor: "#d89a4a",
-  bgColor: "#15110f",
-  textColor: "#f5ead8",
+  accentColor: "#f2c356",
+  bgColor: "#123f46",
+  textColor: "#fff1d6",
   playerName: "",
   characterName: "",
   ttsVoice: "default",
-  diceD4: "#b86452",
-  diceD6: "#7ec7c4",
-  diceD8: "#8bc34a",
-  diceD10: "#ce93d8",
-  diceD12: "#4fc3f7",
-  diceD20: "#d89a4a",
-  btnSettings: "#2a1e18",
-  btnDrawer: "#2a1e18",
-  btnRules: "#2a1e18",
-  btnNotes: "#2a1e18",
-  btnCopy: "#2a1e18",
-  btnSend: "#d89a4a",
+  diceD4: "#d85b3e",
+  diceD6: "#20a6a4",
+  diceD8: "#6fa83d",
+  diceD10: "#c1497a",
+  diceD12: "#2f78c4",
+  diceD20: "#f2a33a",
+  btnSettings: "#0d353c",
+  btnDrawer: "#0d353c",
+  btnRules: "#0d353c",
+  btnNotes: "#0d353c",
+  btnCopy: "#0d353c",
+  btnSend: "#f2a33a",
 };
 
 function hexToRgb(hex) {
@@ -732,7 +732,7 @@ function applySettings(rawSettings) {
   document.documentElement.style.setProperty("--panel", rgba(s.bgColor, 0.9));
   document.documentElement.style.setProperty("--panel-strong", rgba(s.bgColor, 0.98));
   document.documentElement.style.setProperty("--input-bg", rgba(s.bgColor, 0.55));
-  document.documentElement.style.setProperty("--border", rgba(s.accentColor, 0.35));
+  document.documentElement.style.setProperty("--border", rgba(s.accentColor, 0.48));
   document.documentElement.style.setProperty("--accent-glow", rgba(s.accentColor, 0.28));
   document.documentElement.style.setProperty("--tile-accent", s.diceD20 || s.accentColor);
   document.documentElement.style.setProperty("--tile-cream", rgba(s.textColor, 0.95));

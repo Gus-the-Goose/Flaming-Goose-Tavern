@@ -1,4 +1,4 @@
-const CACHE_NAME = "flaming-goose-v14";
+const CACHE_NAME = "flaming-goose-v15";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
@@ -6,8 +6,7 @@ const SHELL_ASSETS = [
   "/app.js",
   "/manifest.webmanifest",
   "/icon-192.png",
-  "/icon-512.png",
-  "/tavern-sign-goose.svg"
+  "/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {

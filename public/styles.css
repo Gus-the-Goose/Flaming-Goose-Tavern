@@ -4,32 +4,32 @@
 
 /* --- CSS Variables / Theming --- */
 :root {
-  --bg: #15110f;
-  --panel: rgba(42, 30, 24, 0.92);
-  --panel-strong: rgba(54, 38, 30, 0.98);
-  --border: rgba(228, 191, 146, 0.2);
-  --text: #f5ead8;
-  --muted: #c3ae96;
-  --accent: #d89a4a;
-  --accent-glow: rgba(216, 154, 74, 0.3);
-  --input-bg: rgba(0, 0, 0, 0.3);
-  --dice-d4: #b86452;
-  --dice-d6: #7ec7c4;
-  --dice-d8: #8bc34a;
-  --dice-d10: #ce93d8;
-  --dice-d12: #4fc3f7;
-  --dice-d20: #d89a4a;
-  --btn-settings: rgba(42, 30, 24, 0.92);
-  --btn-drawer: rgba(42, 30, 24, 0.92);
-  --btn-rules: rgba(42, 30, 24, 0.92);
-  --btn-notes: rgba(42, 30, 24, 0.92);
-  --btn-copy: rgba(42, 30, 24, 0.92);
-  --btn-send: #d89a4a;
+  --bg: #123f46;
+  --panel: rgba(16, 62, 68, 0.92);
+  --panel-strong: rgba(13, 53, 60, 0.98);
+  --border: rgba(242, 195, 86, 0.48);
+  --text: #fff1d6;
+  --muted: #d9c7a6;
+  --accent: #f2c356;
+  --accent-glow: rgba(242, 195, 86, 0.28);
+  --input-bg: rgba(5, 37, 42, 0.58);
+  --dice-d4: #d85b3e;
+  --dice-d6: #20a6a4;
+  --dice-d8: #6fa83d;
+  --dice-d10: #c1497a;
+  --dice-d12: #2f78c4;
+  --dice-d20: #f2a33a;
+  --btn-settings: rgba(13, 53, 60, 0.98);
+  --btn-drawer: rgba(13, 53, 60, 0.98);
+  --btn-rules: rgba(13, 53, 60, 0.98);
+  --btn-notes: rgba(13, 53, 60, 0.98);
+  --btn-copy: rgba(13, 53, 60, 0.98);
+  --btn-send: #f2a33a;
   --danger: #b86452;
   --success: #5a9e6f;
-  --hero-bg: linear-gradient(135deg, rgba(35, 23, 18, 0.97), rgba(20, 16, 14, 0.97));
+  --hero-bg: linear-gradient(135deg, rgba(18, 70, 77, 0.98), rgba(7, 42, 48, 0.98));
   --tile-accent: #d85b3e;
-  --tile-cream: #fff4df;
+  --tile-cream: #fff1d6;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   --radius: 14px;
   --touch: 48px;
@@ -90,7 +90,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border: 4px solid var(--accent);
+  border: 5px solid var(--accent);
   border-radius: 18px 18px 26px 26px;
   background: var(--hero-bg);
   box-shadow: var(--shadow), inset 0 0 0 2px var(--border);
@@ -102,7 +102,7 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 5px;
+  padding: 6px;
   background: repeating-conic-gradient(
     from 45deg,
     var(--accent) 0 25%,
@@ -137,12 +137,6 @@ body {
   gap: 12px;
 }
 
-.hero-goose {
-  width: clamp(56px, 12vw, 88px);
-  height: auto;
-  flex: 0 0 auto;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
-}
 
 .hero-title-block { min-width: 0; }
 
@@ -180,8 +174,8 @@ body {
   border-radius: var(--radius);
   position: relative;
   background: color-mix(in srgb, var(--bg) 72%, var(--accent) 28%);
-  border: 3px solid var(--accent);
-  box-shadow: inset 0 0 0 1px var(--border);
+  border: 4px solid var(--accent);
+  box-shadow: inset 0 0 0 2px var(--border);
   font-size: 0.9em;
 }
 
@@ -282,7 +276,7 @@ button.secondary:disabled {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 2px solid var(--border);
+  border: 3px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   flex-wrap: wrap;
@@ -346,7 +340,7 @@ button.secondary:disabled {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 2px solid var(--border);
+  border: 3px solid var(--border);
   border-radius: var(--radius);
   background:
     linear-gradient(180deg, var(--accent-glow), var(--panel)),
@@ -408,7 +402,7 @@ button.secondary:disabled {
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  border: 2px solid var(--border);
+  border: 3px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
 }
