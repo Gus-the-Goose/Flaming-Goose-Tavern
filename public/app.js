@@ -178,6 +178,7 @@ const refs = {
   setDiceD10: $("#set-dice-d10"),
   setDiceD12: $("#set-dice-d12"),
   setDiceD20: $("#set-dice-d20"),
+  setBtnReadPage: $("#set-btn-read-page"),
   setBtnSettings: $("#set-btn-settings"),
   setBtnDrawer: $("#set-btn-drawer"),
   setBtnRules: $("#set-btn-rules"),
@@ -758,6 +759,7 @@ const defaultSettings = {
   diceD10: "#c1497a",
   diceD12: "#2f78c4",
   diceD20: "#f2a33a",
+  btnReadPage: "#00686d",
   btnSettings: "#00686d",
   btnDrawer: "#00686d",
   btnRules: "#00686d",
@@ -814,6 +816,7 @@ function applySettings(rawSettings) {
   document.documentElement.style.setProperty("--dice-d10", s.diceD10);
   document.documentElement.style.setProperty("--dice-d12", s.diceD12);
   document.documentElement.style.setProperty("--dice-d20", s.diceD20);
+  document.documentElement.style.setProperty("--btn-read-page", s.btnReadPage);
   document.documentElement.style.setProperty("--btn-settings", s.btnSettings);
   document.documentElement.style.setProperty("--btn-drawer", s.btnDrawer);
   document.documentElement.style.setProperty("--btn-rules", s.btnRules);
@@ -844,6 +847,7 @@ function applySettings(rawSettings) {
   refs.setDiceD10.value = s.diceD10;
   refs.setDiceD12.value = s.diceD12;
   refs.setDiceD20.value = s.diceD20;
+  refs.setBtnReadPage.value = s.btnReadPage;
   refs.setBtnSettings.value = s.btnSettings;
   refs.setBtnDrawer.value = s.btnDrawer;
   refs.setBtnRules.value = s.btnRules;
@@ -881,6 +885,7 @@ function initSettings() {
       diceD10: refs.setDiceD10.value,
       diceD12: refs.setDiceD12.value,
       diceD20: refs.setDiceD20.value,
+      btnReadPage: refs.setBtnReadPage.value,
       btnSettings: refs.setBtnSettings.value,
       btnDrawer: refs.setBtnDrawer.value,
       btnRules: refs.setBtnRules.value,
@@ -908,7 +913,7 @@ function initSettings() {
   refs.setVoiceoverMode.addEventListener("change", update);
   [
     refs.setDiceD4, refs.setDiceD6, refs.setDiceD8, refs.setDiceD10, refs.setDiceD12, refs.setDiceD20,
-    refs.setBtnSettings, refs.setBtnDrawer, refs.setBtnRules, refs.setBtnNotes, refs.setBtnCopy, refs.setBtnSend
+    refs.setBtnReadPage, refs.setBtnSettings, refs.setBtnDrawer, refs.setBtnRules, refs.setBtnNotes, refs.setBtnCopy, refs.setBtnSend
   ].forEach((input) => input.addEventListener("input", update));
   refs.settingsReset.addEventListener("click", () => saveSettings({ ...defaultSettings }));
 }

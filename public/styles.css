@@ -21,6 +21,7 @@
   --dice-d10: #c1497a;
   --dice-d12: #2f78c4;
   --dice-d20: #f2a33a;
+  --btn-read-page: rgba(0, 104, 109, 0.98);
   --btn-settings: rgba(0, 104, 109, 0.98);
   --btn-drawer: rgba(0, 104, 109, 0.98);
   --btn-rules: rgba(0, 104, 109, 0.98);
@@ -245,6 +246,7 @@ select option {
 .icon-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .icon-btn.small { width: 36px; height: 36px; font-size: 0.9em; border-radius: 8px; }
 
+#read-page-btn { background: var(--btn-read-page); }
 #settings-btn { background: var(--btn-settings); }
 #drawer-btn { background: var(--btn-drawer); }
 #rules-btn { background: var(--btn-rules); }
