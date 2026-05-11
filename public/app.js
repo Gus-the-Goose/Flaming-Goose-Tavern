@@ -154,6 +154,7 @@ const refs = {
   campaignForm: $("#campaign-form"),
   agentsList: $("#agents-list"),
   // Settings
+  readPageBtn: $("#read-page-btn"),
   settingsBtn: $("#settings-btn"),
   settingsBackdrop: $("#settings-backdrop"),
   settingsClose: $("#settings-close"),
@@ -170,6 +171,7 @@ const refs = {
   setPlayerName: $("#set-player-name"),
   setCharacterName: $("#set-character-name"),
   setTtsVoice: $("#set-tts-voice"),
+  setVoiceoverMode: $("#set-voiceover-mode"),
   setDiceD4: $("#set-dice-d4"),
   setDiceD6: $("#set-dice-d6"),
   setDiceD8: $("#set-dice-d8"),
@@ -440,6 +442,7 @@ async function refreshState() {
   if (nextSignature !== lastLogSignature) {
     renderLog(nextData.log);
   }
+  speakNewEntriesIfVoiceoverMode(newEntries);
 }
 
 function startAutoRefresh() {
@@ -474,6 +477,7 @@ document.querySelectorAll(".dice-btn").forEach((btn) => {
 
 // --- TTS (Web Speech API) ---
 let ttsActive = false;
+let ttsQueue = [];
 
 function preferredVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -491,18 +495,48 @@ function preferredVoice() {
     || null;
 }
 
-function speak(text) {
+function splitSpeechText(text, maxLength = 220) {
+  const sentences = String(text || "")
+    .replace(/\s+/g, " ")
+    .match(/[^.!?]+[.!?]?|.+$/g) || [];
+  const chunks = [];
+  let current = "";
+  for (const sentence of sentences.map((s) => s.trim()).filter(Boolean)) {
+    if ((current + " " + sentence).trim().length > maxLength && current) {
+      chunks.push(current);
+      current = sentence;
+    } else {
+      current = `${current} ${sentence}`.trim();
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
+function speakNextChunk() {
   if (!("speechSynthesis" in window)) return;
-  archiveSpokenText(text);
-  window.speechSynthesis.cancel();
+  const text = ttsQueue.shift();
+  if (!text) {
+    ttsActive = false;
+    updateTtsControl();
+    return;
+  }
   const utterance = new SpeechSynthesisUtterance(text);
   const voice = preferredVoice();
   if (voice) utterance.voice = voice;
   utterance.rate = 0.95;
   utterance.onstart = () => { ttsActive = true; updateTtsControl(); };
-  utterance.onend = () => { ttsActive = false; updateTtsControl(); };
-  utterance.onerror = () => { ttsActive = false; updateTtsControl(); };
+  utterance.onend = speakNextChunk;
+  utterance.onerror = () => { ttsActive = false; ttsQueue = []; updateTtsControl(); };
   window.speechSynthesis.speak(utterance);
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  archiveSpokenText(text);
+  window.speechSynthesis.cancel();
+  ttsQueue = splitSpeechText(text);
+  speakNextChunk();
 }
 
 function speakLogEntry(entry) {
@@ -512,9 +546,43 @@ function speakLogEntry(entry) {
 
 function stopSpeaking() {
   if (!("speechSynthesis" in window)) return;
+  ttsQueue = [];
   window.speechSynthesis.cancel();
   ttsActive = false;
   updateTtsControl();
+}
+
+function pageSpeechText() {
+  const parts = [];
+  parts.push(refs.title.textContent || "The Flaming Goose Tavern");
+  parts.push(`Scene. ${refs.sceneLine.textContent || "No scene set"}`);
+  const diceText = refs.diceResult?.classList.contains("hidden") ? "" : refs.diceResult.textContent;
+  if (diceText) parts.push(`Latest dice result. ${diceText}`);
+  const logEntries = Array.from(refs.logList.querySelectorAll(".log-entry"));
+  if (logEntries.length) {
+    parts.push("Table messages.");
+    for (const entry of logEntries.slice(-30)) {
+      const speaker = entry.querySelector(".log-speaker")?.textContent?.trim();
+      const text = entry.querySelector(".log-text")?.textContent?.trim();
+      if (text) parts.push(`${speaker || "Unknown"}. ${text}`);
+    }
+  } else {
+    parts.push("No table messages yet.");
+  }
+  return parts.join("\n");
+}
+
+function speakPage() {
+  speak(pageSpeechText());
+}
+
+function speakNewEntriesIfVoiceoverMode(entries = []) {
+  if (!loadSettings().voiceoverMode || !entries.length) return;
+  const text = entries
+    .filter((entry) => entry?.text && !isDefaultWelcomeEntry(entry))
+    .map((entry) => `New message. ${entry.speakerLabel || "Unknown"}. ${entry.text}`)
+    .join("\n");
+  if (text) speak(text);
 }
 
 function toggleTts() {
@@ -683,6 +751,7 @@ const defaultSettings = {
   playerName: "",
   characterName: "",
   ttsVoice: "default",
+  voiceoverMode: false,
   diceD4: "#d85b3e",
   diceD6: "#20a6a4",
   diceD8: "#6fa83d",
@@ -768,6 +837,7 @@ function applySettings(rawSettings) {
   refs.setPlayerName.value = s.playerName;
   refs.setCharacterName.value = s.characterName;
   refs.setTtsVoice.value = s.ttsVoice;
+  refs.setVoiceoverMode.checked = s.voiceoverMode;
   refs.setDiceD4.value = s.diceD4;
   refs.setDiceD6.value = s.diceD6;
   refs.setDiceD8.value = s.diceD8;
@@ -804,6 +874,7 @@ function initSettings() {
       playerName: refs.setPlayerName.value.trim(),
       characterName: refs.setCharacterName.value.trim(),
       ttsVoice: refs.setTtsVoice.value,
+      voiceoverMode: refs.setVoiceoverMode.checked,
       diceD4: refs.setDiceD4.value,
       diceD6: refs.setDiceD6.value,
       diceD8: refs.setDiceD8.value,
@@ -834,6 +905,7 @@ function initSettings() {
   refs.setPlayerName.addEventListener("input", update);
   refs.setCharacterName.addEventListener("input", update);
   refs.setTtsVoice.addEventListener("change", update);
+  refs.setVoiceoverMode.addEventListener("change", update);
   [
     refs.setDiceD4, refs.setDiceD6, refs.setDiceD8, refs.setDiceD10, refs.setDiceD12, refs.setDiceD20,
     refs.setBtnSettings, refs.setBtnDrawer, refs.setBtnRules, refs.setBtnNotes, refs.setBtnCopy, refs.setBtnSend
@@ -845,6 +917,7 @@ function initSettings() {
 function openModal(backdrop) { backdrop.classList.remove("hidden"); }
 function closeModal(backdrop) { backdrop.classList.add("hidden"); }
 
+refs.readPageBtn.addEventListener("click", speakPage);
 refs.settingsBtn.addEventListener("click", () => openModal(refs.settingsBackdrop));
 refs.settingsClose.addEventListener("click", () => closeModal(refs.settingsBackdrop));
 refs.settingsBackdrop.addEventListener("click", (e) => {

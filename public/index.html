@@ -68,6 +68,11 @@
                 <option value="male">Male voice if available</option>
               </select>
             </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="set-voiceover-mode" />
+              <span>Voiceover mode: automatically read new table messages</span>
+            </label>
+            <p class="hint-text">Use the 📢 button at the top to read the current page aloud. Voiceover mode also reads new messages as they arrive.</p>
           </fieldset>
           <label class="toggle-label">
             <input type="checkbox" id="set-high-contrast" />
@@ -186,6 +191,7 @@
           </div>
         </div>
         <div class="hero-actions" aria-label="Table tools">
+          <button id="read-page-btn" class="icon-btn" aria-label="Read this page aloud" title="Read this page aloud">📢</button>
           <button id="settings-btn" class="icon-btn" aria-label="Accessibility settings" title="Accessibility settings">⚙️</button>
           <button id="drawer-btn" class="icon-btn" aria-label="Characters and campaign" title="Characters and campaign">🏹</button>
           <button id="rules-btn" class="icon-btn" aria-label="Rules reference" title="Rules reference">📒</button>
