@@ -678,7 +678,7 @@ const defaultSettings = {
   highContrast: false,
   reduceMotion: false,
   accentColor: "#f2c356",
-  bgColor: "#123f46",
+  bgColor: "#009095",
   textColor: "#fff1d6",
   playerName: "",
   characterName: "",
@@ -689,11 +689,11 @@ const defaultSettings = {
   diceD10: "#c1497a",
   diceD12: "#2f78c4",
   diceD20: "#f2a33a",
-  btnSettings: "#0d353c",
-  btnDrawer: "#0d353c",
-  btnRules: "#0d353c",
-  btnNotes: "#0d353c",
-  btnCopy: "#0d353c",
+  btnSettings: "#00686d",
+  btnDrawer: "#00686d",
+  btnRules: "#00686d",
+  btnNotes: "#00686d",
+  btnCopy: "#00686d",
   btnSend: "#f2a33a",
 };
 
@@ -734,8 +734,8 @@ function applySettings(rawSettings) {
   document.documentElement.style.setProperty("--input-bg", rgba(s.bgColor, 0.55));
   document.documentElement.style.setProperty("--border", rgba(s.accentColor, 0.48));
   document.documentElement.style.setProperty("--accent-glow", rgba(s.accentColor, 0.28));
-  document.documentElement.style.setProperty("--tile-accent", s.diceD20 || s.accentColor);
-  document.documentElement.style.setProperty("--tile-cream", rgba(s.textColor, 0.95));
+  document.documentElement.style.setProperty("--tile-accent", "#ff5e42");
+  document.documentElement.style.setProperty("--tile-cream", "#20a6a4");
   document.documentElement.style.setProperty("--hero-bg", `linear-gradient(135deg, ${rgba(s.bgColor, 0.98)}, ${rgba(s.bgColor, 0.92)})`);
   document.documentElement.style.setProperty("--dice-d4", s.diceD4);
   document.documentElement.style.setProperty("--dice-d6", s.diceD6);
