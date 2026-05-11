@@ -112,13 +112,9 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 6px;
-  background: repeating-conic-gradient(
-    from 45deg,
-    var(--tile-accent) 0 25%,
-    var(--tile-cream) 0 50%,
-    var(--tile-accent) 0 75%,
-    var(--tile-cream) 0 100%
-  ) 0 0 / 18px 18px;
+  background:
+    linear-gradient(45deg, var(--tile-accent) 25%, transparent 25%, transparent 75%, var(--tile-accent) 75%) 0 0 / 16px 16px,
+    linear-gradient(45deg, var(--tile-cream) 25%, transparent 25%, transparent 75%, var(--tile-cream) 75%) 8px 8px / 16px 16px;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -194,13 +190,9 @@ body {
   inset: -3px;
   border-radius: inherit;
   padding: 4px;
-  background: repeating-conic-gradient(
-    from 45deg,
-    var(--tile-accent) 0 25%,
-    var(--tile-cream) 0 50%,
-    var(--tile-accent) 0 75%,
-    var(--tile-cream) 0 100%
-  ) 0 0 / 16px 16px;
+  background:
+    linear-gradient(45deg, var(--tile-accent) 25%, transparent 25%, transparent 75%, var(--tile-accent) 75%) 0 0 / 14px 14px,
+    linear-gradient(45deg, var(--tile-cream) 25%, transparent 25%, transparent 75%, var(--tile-cream) 75%) 7px 7px / 14px 14px;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -351,13 +343,9 @@ button.secondary:disabled {
   padding: 12px;
   border: 3px solid var(--border);
   border-radius: var(--radius);
-  background-color: var(--panel);
-  background-image:
+  background:
     linear-gradient(180deg, var(--accent-glow), transparent),
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: auto, 96px 96px, 96px 96px;
-  background-position: 0 0, 4px 4px, 4px 4px;
+    var(--panel);
   scroll-behavior: smooth;
 }
 
