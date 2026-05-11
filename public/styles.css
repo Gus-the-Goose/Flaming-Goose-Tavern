@@ -28,6 +28,8 @@
   --danger: #b86452;
   --success: #5a9e6f;
   --hero-bg: linear-gradient(135deg, rgba(35, 23, 18, 0.97), rgba(20, 16, 14, 0.97));
+  --tile-accent: #d85b3e;
+  --tile-cream: #fff4df;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   --radius: 14px;
   --touch: 48px;
@@ -82,18 +84,49 @@ body {
 
 /* --- Hero Header --- */
 .hero {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--hero-bg);
-  box-shadow: var(--shadow);
+  border: 3px solid transparent;
+  border-radius: 18px 18px 26px 26px;
+  background:
+    var(--hero-bg) padding-box,
+    repeating-linear-gradient(90deg, var(--accent) 0 12px, var(--tile-cream) 12px 18px, var(--tile-accent) 18px 30px, var(--tile-cream) 30px 36px) border-box;
+  box-shadow: var(--shadow), inset 0 0 0 2px var(--border);
+  overflow: hidden;
 }
 
-.hero-text { flex: 1; min-width: 0; }
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 75%, white 25%);
+  border-radius: 12px 12px 20px 20px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.hero-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-goose {
+  width: clamp(56px, 12vw, 88px);
+  height: auto;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.hero-title-block { min-width: 0; }
 
 .eyebrow {
   color: var(--accent);
@@ -114,6 +147,8 @@ body {
 .hero-copy:empty { display: none; }
 
 .hero-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   gap: 6px;
   flex-shrink: 0;
@@ -125,8 +160,11 @@ body {
 .scene-banner {
   padding: 10px 16px;
   border-radius: var(--radius);
-  background: var(--accent-glow);
-  border: 1px solid var(--accent);
+  background:
+    linear-gradient(var(--accent-glow), var(--accent-glow)) padding-box,
+    repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 16px, var(--tile-accent) 16px 26px, transparent 26px 32px) border-box;
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
   font-size: 0.9em;
 }
 
@@ -202,7 +240,7 @@ button.secondary:disabled {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   flex-wrap: wrap;
@@ -266,7 +304,7 @@ button.secondary:disabled {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   background:
     linear-gradient(180deg, var(--accent-glow), var(--panel)),
@@ -328,7 +366,7 @@ button.secondary:disabled {
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
 }
@@ -842,6 +880,14 @@ button.secondary:disabled {
   .shell { padding: 20px; }
   .hero h1 { font-size: 1.6em; }
   .panel-log { max-height: 60vh; }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .hero-actions { align-self: flex-end; }
 }
 
 /* --- Focus / Accessibility --- */
