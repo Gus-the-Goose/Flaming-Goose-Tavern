@@ -327,6 +327,19 @@ button.secondary:disabled {
   text-align: center;
 }
 
+.dice-mute {
+  min-height: var(--touch);
+  margin-left: auto;
+}
+.dice-mute[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  background: var(--accent-glow);
+}
+.dice-mute:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .dice-result {
   flex: 1 1 100%;
   text-align: center;

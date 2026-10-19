@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@libsql/client": "^0.17.3"
+  },
+  "devDependencies": {
+    "linkedom": "^0.18.13"
   }
 }

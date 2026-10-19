@@ -212,6 +212,7 @@ const refs = {
   drawerClose: $("#drawer-close"),
   // Dice
   diceMod: $("#dice-mod"),
+  diceMute: $("#dice-mute"),
   diceResult: $("#dice-result"),
 };
 
@@ -456,6 +457,24 @@ function startAutoRefresh() {
 }
 
 // --- Dice Roller ---
+let lastDiceRollMuted = false;
+
+function setDiceAnnouncements(enabled) {
+  refs.diceResult.setAttribute("aria-live", enabled ? "assertive" : "off");
+  if (enabled) refs.diceResult.setAttribute("role", "alert");
+  else refs.diceResult.removeAttribute("role");
+}
+
+function updateDiceMuteControl(muted) {
+  refs.diceMute.setAttribute("aria-pressed", String(muted));
+  refs.diceMute.textContent = muted ? "Dice muted" : "Mute dice";
+  refs.diceMute.title = muted ? "Unmute future dice rolls" : "Silence dice rolls on this device";
+  if (muted) {
+    setDiceAnnouncements(false);
+    if (speechIncludesDice) stopSpeaking();
+  }
+}
+
 function rollDie(sides) {
   const mod = parseInt(refs.diceMod.value) || 0;
   const result = Math.floor(Math.random() * sides) + 1;
@@ -463,11 +482,17 @@ function rollDie(sides) {
   const modStr = mod !== 0 ? ` (${mod >= 0 ? "+" : ""}${mod})` : "";
   const display = `d${sides}: ${result}${modStr} = ${total}`;
 
+  lastDiceRollMuted = loadSettings().diceMuted;
+  // Clear the previous result before restoring announcements: it may be a DM roll.
+  refs.diceResult.textContent = "";
+  setDiceAnnouncements(!lastDiceRollMuted);
   refs.diceResult.textContent = display;
   refs.diceResult.classList.remove("hidden");
 
   const modifierText = mod === 0 ? "with no modifier" : `${mod > 0 ? "plus" : "minus"} ${Math.abs(mod)}`;
-  speak(`Rolled a d ${sides}. Natural ${result}, ${modifierText}, total ${total}.`);
+  if (!lastDiceRollMuted) {
+    speak(`Rolled a d ${sides}. Natural ${result}, ${modifierText}, total ${total}.`, { includesDice: true });
+  }
 
   return total;
 }
@@ -478,9 +503,15 @@ document.querySelectorAll(".dice-btn").forEach((btn) => {
   });
 });
 
+refs.diceMute.addEventListener("click", () => {
+  const settings = loadSettings();
+  saveSettings({ ...settings, diceMuted: !settings.diceMuted });
+});
+
 // --- TTS (Web Speech API) ---
 let ttsActive = false;
 let ttsQueue = [];
+let speechIncludesDice = false;
 let guideItems = [];
 let guideIndex = 0;
 
@@ -523,6 +554,7 @@ function speakNextChunk() {
   const text = ttsQueue.shift();
   if (!text) {
     ttsActive = false;
+    speechIncludesDice = false;
     updateTtsControl();
     return;
   }
@@ -532,14 +564,15 @@ function speakNextChunk() {
   utterance.rate = 0.95;
   utterance.onstart = () => { ttsActive = true; updateTtsControl(); };
   utterance.onend = speakNextChunk;
-  utterance.onerror = () => { ttsActive = false; ttsQueue = []; updateTtsControl(); };
+  utterance.onerror = () => { ttsActive = false; ttsQueue = []; speechIncludesDice = false; updateTtsControl(); };
   window.speechSynthesis.speak(utterance);
 }
 
-function speak(text) {
+function speak(text, { includesDice = false } = {}) {
   if (!("speechSynthesis" in window)) return;
   archiveSpokenText(text);
   window.speechSynthesis.cancel();
+  speechIncludesDice = includesDice;
   ttsQueue = splitSpeechText(text);
   speakNextChunk();
 }
@@ -556,6 +589,7 @@ function clearVoiceoverHighlights() {
 function stopSpeaking() {
   if (!("speechSynthesis" in window)) return;
   ttsQueue = [];
+  speechIncludesDice = false;
   guideItems = [];
   guideIndex = 0;
   clearVoiceoverHighlights();
@@ -593,17 +627,23 @@ function speakGuide(items) {
   if (!("speechSynthesis" in window)) return;
   archiveSpokenText(items.map((item) => item.text).join("\n"));
   ttsQueue = [];
+  speechIncludesDice = false;
   guideItems = items.filter((item) => item?.text);
   guideIndex = 0;
   window.speechSynthesis.cancel();
   speakGuideItem();
 }
 
+function readableDiceResult() {
+  if (loadSettings().diceMuted || lastDiceRollMuted || refs.diceResult.classList.contains("hidden")) return "";
+  return refs.diceResult.textContent;
+}
+
 function pageSpeechText() {
   const parts = [];
   parts.push(refs.title.textContent || "The Flaming Goose Tavern");
   parts.push(`Scene. ${refs.sceneLine.textContent || "No scene set"}`);
-  const diceText = refs.diceResult?.classList.contains("hidden") ? "" : refs.diceResult.textContent;
+  const diceText = readableDiceResult();
   if (diceText) parts.push(`Latest dice result. ${diceText}`);
   const logEntries = Array.from(refs.logList.querySelectorAll(".log-entry"));
   if (logEntries.length) {
@@ -620,21 +660,22 @@ function pageSpeechText() {
 }
 
 function speakPage() {
-  speak(pageSpeechText());
+  speak(pageSpeechText(), { includesDice: Boolean(readableDiceResult()) });
 }
 
 function startControlGuide() {
   closeModal(refs.settingsBackdrop);
   const diceButtons = Array.from(document.querySelectorAll(".dice-btn"));
   const items = [
-    { element: refs.readPageBtn, text: "Read page aloud. This reads the title, current scene, latest dice result, and recent table messages." },
+    { element: refs.readPageBtn, text: "Read page aloud. This reads the title, current scene, latest unmuted dice result, and recent table messages. Muted dice results are skipped." },
     { element: refs.settingsBtn, text: "Accessibility settings. Change font, colours, player identity, speech voice, and voiceover mode here." },
     { element: refs.drawerBtn, text: "Campaign and characters. This opens the campaign notes and character sheets." },
     { element: refs.rulesBtn, text: "Rules reference. This opens searchable Dungeons and Dragons rules help. Inside it, use Read rules choices aloud to hear the rule topics." },
     { element: refs.notesBtn, text: "Session notes. This opens dictation and notes tools for the session." },
     { element: refs.copyBtn, text: "Export transcript. This downloads the table message transcript as a text file." },
-    ...diceButtons.map((button) => ({ element: button, text: `Roll ${button.textContent}. Press this to roll a ${button.textContent}. The result will be spoken aloud.` })),
+    ...diceButtons.map((button) => ({ element: button, text: `Roll ${button.textContent}. Press this to roll a ${button.textContent}. The result is spoken unless dice are muted.` })),
     { element: refs.diceMod, text: "Dice modifier. Put a positive or negative number here before rolling, for example plus two or minus one." },
+    { element: refs.diceMute, text: "Mute dice rolls. Toggle this to silence dice on this device. Results stay visible. Table messages and other read-aloud controls still work." },
     { element: refs.audienceSelect, text: "Audience. Choose whether your message goes to the whole table or one character." },
     { element: refs.oocToggle, text: "O O C toggle. Turn this on when you are speaking out of character." },
     { element: refs.messageInput, text: "Message box. Type your table message here." },
@@ -833,6 +874,7 @@ const defaultSettings = {
   characterName: "",
   ttsVoice: "default",
   voiceoverMode: false,
+  diceMuted: false,
   diceD4: "#d85b3e",
   diceD6: "#20a6a4",
   diceD8: "#6fa83d",
@@ -934,6 +976,7 @@ function applySettings(rawSettings) {
   refs.setBtnNotes.value = s.btnNotes;
   refs.setBtnCopy.value = s.btnCopy;
   refs.setBtnSend.value = s.btnSend;
+  updateDiceMuteControl(s.diceMuted);
 }
 
 function saveSettings(s) {
@@ -947,6 +990,7 @@ function initSettings() {
 
   const update = () => {
     const s = {
+      ...loadSettings(),
       fontSize: parseInt(refs.setFontSize.value),
       fontWeight: refs.setFontWeight.value,
       fontFamily: refs.setFontFamily.value,
