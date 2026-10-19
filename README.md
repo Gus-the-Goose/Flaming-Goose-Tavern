@@ -36,9 +36,14 @@ npm run dev
 - Persistent campaign state stored in `data/runtime-state.json` locally, or in Turso/libSQL when configured
 - Example seeded characters and campaign memory
 - Turn-based shared log
+- Dice read-aloud with a device-local **Mute dice** toggle for quiet DM rolls
 - Human prompts can target the full table or a single character
 - Mock agent reply generator with distinct role/voice prompts
 - Clear adapter boundary for future real LLM integration in `lib/llm-adapter.js`
+
+## Tests
+
+Run `npm ci` then `npm test` to check dice speech, mute persistence, and read-page privacy using the actual frontend handlers.
 
 ## Persistence
 

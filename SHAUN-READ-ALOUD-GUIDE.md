@@ -26,7 +26,7 @@ It should read things like:
 
 - the app title
 - the current scene
-- the latest dice result, if there is one
+- the latest dice result, if it was rolled with dice unmuted and dice are still unmuted
 - recent table messages
 
 If it starts reading and you want it to stop, use the small read-aloud control that appears near the bottom-right of the screen, or press another read-aloud button.
@@ -69,6 +69,7 @@ This includes:
 - export transcript
 - dice buttons
 - dice modifier
+- mute dice
 - message box
 - send button
 
@@ -83,6 +84,10 @@ For example, it may say:
 > Rolled a d20. Natural 13, plus 2, total 15.
 
 If you need a modifier, type it in the **± Mod** box before rolling.
+
+For quiet DM rolls, press **Mute dice** beside the dice controls before rolling. The button changes to **Dice muted**. Results still appear on screen, but the app does not speak them or automatically announce them to a screen reader. **Read page aloud** also skips muted results, even after you unmute.
+
+Press **Dice muted** again to hear future rolls. This preference is remembered on this browser/device and does not affect anyone else's dice or table-message speech.
 
 ---
 
